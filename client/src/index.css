@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    background: #080808;
+    color: #111111;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  ::selection {
+    background: #d6b46a;
+    color: #080808;
+  }
+}
+
+@layer components {
+  .container-shell {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.28em] text-gold;
+  }
+
+  .section-padding {
+    @apply py-20 sm:py-24 lg:py-28;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-champagne px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-ink transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-champagne focus:ring-offset-2 focus:ring-offset-ink;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 border border-white/25 px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-white transition hover:border-champagne hover:text-champagne focus:outline-none focus:ring-2 focus:ring-champagne focus:ring-offset-2 focus:ring-offset-ink;
+  }
+
+  .input-field {
+    @apply w-full border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink/40 focus:border-gold focus:ring-2 focus:ring-gold/20;
+  }
+}

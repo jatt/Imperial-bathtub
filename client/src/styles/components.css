@@ -1,0 +1,695 @@
+.top-strip {
+  background: var(--color-gold);
+  color: var(--color-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.top-strip__inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(248, 245, 239, 0.94);
+  border-bottom: 1px solid rgba(23, 20, 17, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  min-height: 76px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-dark);
+  color: var(--color-gold);
+  font-weight: 900;
+}
+
+.navbar__links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.navbar__links a {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.navbar__links a.active {
+  color: var(--color-ink);
+}
+
+.navbar__links a.active::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--color-gold);
+  content: "";
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.navbar__toggle {
+  display: none;
+}
+
+.hero {
+  position: relative;
+  min-height: calc(100vh - 118px);
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+  color: #ffffff;
+}
+
+.hero img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(16, 16, 15, 0.88), rgba(16, 16, 15, 0.38)),
+    linear-gradient(0deg, rgba(16, 16, 15, 0.32), rgba(16, 16, 15, 0.18));
+}
+
+.hero__content {
+  position: relative;
+  max-width: 760px;
+  padding: 88px 0;
+}
+
+.hero__content p {
+  max-width: 620px;
+  color: #eee8dd;
+  font-size: 1.1rem;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 1.8rem;
+}
+
+.stats-bar {
+  background: var(--color-dark);
+  color: #ffffff;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stats-bar__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.stats-bar__item {
+  min-height: 112px;
+  display: grid;
+  align-content: center;
+  gap: 0.25rem;
+  padding: 1.3rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-bar__item strong {
+  color: var(--color-gold);
+  font-size: 1.6rem;
+}
+
+.stats-bar__item span {
+  color: #d6cec1;
+  font-size: 0.9rem;
+}
+
+.section-header {
+  max-width: 760px;
+  margin-bottom: 2.2rem;
+}
+
+.section-header--center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.section-header p {
+  font-size: 1rem;
+}
+
+.category-grid,
+.product-grid,
+.feature-grid,
+.trust-grid {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.category-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.category-card,
+.product-card,
+.feature-card,
+.trust-grid article,
+.faq-item,
+.spec-card,
+.auth-card {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.category-card {
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.category-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.category-card div {
+  padding: 1.2rem;
+}
+
+.product-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.product-card {
+  overflow: hidden;
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.product-card__image {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.product-card__image img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 260ms ease;
+}
+
+.product-card:hover .product-card__image img {
+  transform: scale(1.04);
+}
+
+.product-card__image span {
+  position: absolute;
+  left: 0.9rem;
+  bottom: 0.9rem;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(16, 16, 15, 0.82);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.product-card__body {
+  padding: 1.2rem;
+}
+
+.product-card__price {
+  margin-bottom: 0.55rem;
+  color: var(--color-gold-dark);
+  font-weight: 900;
+}
+
+.feature-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.feature-card,
+.trust-grid article,
+.faq-item {
+  padding: 1.3rem;
+  background: var(--color-surface);
+}
+
+.section--dark .feature-card,
+.section--dark .trust-grid article {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feature-card svg,
+.trust-grid svg {
+  color: var(--color-gold);
+  margin-bottom: 1rem;
+}
+
+.split-layout {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  align-items: start;
+  gap: 2rem;
+}
+
+.faq-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.cta {
+  padding: 88px 0;
+  background:
+    linear-gradient(135deg, rgba(200, 155, 60, 0.2), transparent 44%),
+    var(--color-dark-soft);
+  color: #ffffff;
+  text-align: center;
+}
+
+.cta__inner {
+  max-width: 760px;
+}
+
+.cta p {
+  color: #d7d1c7;
+}
+
+.footer {
+  padding: 72px 0 24px;
+  background: var(--color-dark);
+  color: #ffffff;
+}
+
+.footer__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr 0.8fr 1fr;
+  gap: 2rem;
+}
+
+.footer p,
+.footer a,
+.footer span {
+  color: #d2cabf;
+}
+
+.footer h3 {
+  color: #ffffff;
+}
+
+.footer a {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.brand--footer {
+  margin-bottom: 1rem;
+}
+
+.footer__socials {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.footer__socials a {
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+}
+
+.footer__bottom {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.floating-actions {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 45;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.floating-actions__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-dark);
+  color: #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.floating-actions__button--accent {
+  background: var(--color-green);
+}
+
+
+/* Container ko center karne aur standard width dene ke liye */
+.container {
+  width: 100%;
+  max-width: 1200px;       /* Yeh layout ko bohot zyada phailne se rokega */
+  margin-left: auto;       /* Left se center karega */
+  margin-right: auto;      /* Right se center karega */
+  padding-left: 24px;      /* Mobile par content screen se chipke na */
+  padding-right: 24px;     /* Mobile par content screen se chipke na */
+  box-sizing: border-box;  /* Padding ko width ke andar hi adjust rakhega */
+}
+
+/* Page Hero section ko thoda sa saas lene ke liye padding */
+.page-hero {
+  padding-top: 60px;
+  padding-bottom: 40px;
+  background-color: #fbfbf9; /* Ek premium light background (optional, aap change kar sakte hain) */
+}
+
+/* Sections ke beech mein professional gap ke liye */
+.section {
+  padding-top: 60px;
+  padding-bottom: 60px;
+}
+
+/* Eyebrow text (jaise PRODUCT CATALOG) ko thoda premium look dene ke liye */
+.eyebrow {
+  display: block;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #c5a880; /* Premium gold tint, wellness brands ke liye accha lagta hai */
+  margin-bottom: 12px;
+}
+
+/* Product Card ke grid ko thoda set karne ke liye (agar abhi tak nahi kiya hai) */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+/* ==========================================================================
+   FIXED & IMPROVED MODAL STYLES
+   ========================================================================== */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000; /* Z-index badha diya taaki hamesha top par rahe */
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(16, 16, 15, 0.65);
+  backdrop-filter: blur(6px); /* Background content thoda blur hoga toh premium dikhega */
+  cursor: pointer;
+}
+
+.modal__panel {
+  position: relative;
+  width: min(100%, 540px);
+  max-height: min(92vh, 780px);
+  overflow: auto;
+  padding: 2.5rem; /* Padding thodi badhayi space behtar karne ke liye */
+  border-radius: var(--radius, 12px);
+  
+  /* CRITICAL FIX: Fallback background color lagaya agar CSS variable fail ho jaye */
+  background: var(--color-surface, #fdfbf7); 
+  
+  /* Piche ka koi bhi text dekhne se block karne ke liye solid opacity fallback */
+  background-color: #fdfbf7 !important; 
+  
+  box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.3), 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+}
+
+.modal__close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.modal__close:hover {
+  opacity: 1;
+}
+
+/* Heading Improvements inside Modal */
+.modal__panel h2 {
+  font-family: serif; /* Elegant look ke liye */
+  font-size: 1.85rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  color: #23201d;
+}
+
+.modal__panel p {
+  color: #66615a;
+  font-size: 0.95rem;
+  margin-bottom: 1.8rem;
+}
+
+/* Form layout fine-tuning */
+.form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.form__row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form label {
+  display: grid;
+  gap: 0.5rem;
+  color: #23201d;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.form input,
+.form textarea {
+  width: 100%;
+  border: 1px solid #dcd7cc;
+  border-radius: var(--radius, 6px);
+  background: #ffffff; /* Inputs ko pure white kiya readability ke liye */
+  color: #171411;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.form input:focus,
+.form textarea:focus {
+  border-color: var(--color-gold, #c89b3c);
+  box-shadow: 0 0 0 3px rgba(200, 155, 60, 0.18);
+}
+
+.form__error,
+.form__success {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius, 6px);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.form__error {
+  background: #fff0ee;
+  color: #a13426;
+  border: 1px solid #f9d5d0;
+}
+
+.form__success {
+  background: #eefaf4;
+  color: #0f6f4f;
+  border: 1px solid #d3f2e1;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  min-height: 140px;
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.loading__ring {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(200, 155, 60, 0.25);
+  border-top-color: var(--color-gold);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .navbar__links {
+    position: absolute;
+    top: 100%;
+    right: 12px;
+    left: 12px;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .navbar__links.is-open {
+    display: flex;
+  }
+
+  .navbar__toggle {
+    display: inline-flex;
+  }
+
+  .navbar__actions .btn {
+    display: none;
+  }
+
+  .category-grid,
+  .product-grid,
+  .feature-grid,
+  .trust-grid,
+  .footer__grid,
+  .split-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-strip__inner {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .top-strip__inner a {
+    display: none;
+  }
+
+  .navbar {
+    min-height: 68px;
+  }
+
+  .brand span:last-child {
+    font-size: 1.05rem;
+  }
+
+  .hero {
+    min-height: 620px;
+  }
+
+  .hero__content {
+    padding: 72px 0;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+  }
+
+  .form__row {
+    grid-template-columns: 1fr; /* Mobile par Name aur Phone ek ke niche ek aayenge */
+    gap: 1.25rem;
+  }
+
+  .stats-bar__grid,
+  .category-grid,
+  .product-grid,
+  .feature-grid,
+  .trust-grid,
+  .footer__grid,
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-bar__item {
+    min-height: 90px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
