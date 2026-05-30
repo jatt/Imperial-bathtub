@@ -59,7 +59,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-// FloatingActions ka import ab zaroorat nahi hai toh hata diya
+// FloatingActions is no longer used.
 import QuoteModal from "./components/QuoteModal";
 import ScrollToHash from "./components/ScrollToHash";
 

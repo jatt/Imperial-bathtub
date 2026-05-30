@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { authApi } from "../api/http";
-import "./Login.css"; // CSS file ko import karna na bhulein
+import "./Login.css";
 
 const Login = () => {
   const [mode, setMode] = useState("login");

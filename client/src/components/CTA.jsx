@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 const CTA = ({ onQuoteClick }) => {
   return (
     <section className="cta max-w-6xl mx-auto px-6 py-12">
-      {/* Main Box - Isme humne dark classy tone aur slight blur lagaya hai luxury feel ke liye */}
+      {/* Main box with a refined dark tone and subtle blur. */}
       <div className="container cta__inner bg-gradient-to-br from-[#1E1B18] to-[#12100E] text-white p-12 md:p-16 rounded-3xl relative overflow-hidden shadow-xl border border-amber-950/20 text-center flex flex-col items-center justify-center">
         
         {/* Decorative subtle background glow element */}

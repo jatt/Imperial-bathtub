@@ -66,11 +66,17 @@ const Products = ({ onQuoteClick }) => {
           </div> */}
           {isLoading ? (
             <LoadingSpinner />
-          ) : (
+          ) : visibleProducts.length > 0 ? (
             <div className="product-grid">
               {visibleProducts.map((product) => (
                 <ProductCard product={product} key={product._id || product.slug} />
               ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-ink/10 bg-white p-12 text-center my-6">
+              <p className="text-sm font-semibold text-ink/75">
+                No products are listed in our catalog at the moment. Please check back later or contact us directly.
+              </p>
             </div>
           )}
         </div>

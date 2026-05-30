@@ -22,7 +22,7 @@ const values = [
 
 const About = ({ onQuoteClick }) => {
   return (
-    // Poori body ka background elegant tone me rakha hai
+    // Keep the whole page on an elegant background.
     <div className="bg-[#FAF8F5] text-slate-800 min-h-screen font-sans antialiased">
 
       {/* SECTION 1: HERO (Centered & Controlled Width) */}
@@ -48,7 +48,7 @@ const About = ({ onQuoteClick }) => {
 
       {/* SECTION 2: MISSION & VALUES (Grid Control) */}
       <section className="section max-w-6xl mx-auto px-6 py-16 border-t border-slate-200/60">
-        {/* 'lg:grid-cols-12' se header left me aur cards right me balanced lagenge */}
+        {/* The grid keeps the header and cards balanced on desktop. */}
         <div className="container grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
           <div className="lg:col-span-4">
@@ -59,15 +59,15 @@ const About = ({ onQuoteClick }) => {
             />
           </div>
 
-          {/* Cards auto-adjust honge 3 columns me desktops par */}
+          {/* Cards adjust into three columns on desktop. */}
           <div className="feature-grid lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             {values.map((value) => (
-              /* Card Container: Isme background white, light border aur halka premium shadow diya hai */
+              /* Card container with white background, light border, and subtle premium shadow. */
               <div
                 key={value.title}
                 className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] hover:shadow-md transition-all duration-300 flex flex-col justify-between"
               >
-                {/* Ab double tick nahi aayega, sirf aapka FeatureCard beautifully render hoga */}
+                {/* FeatureCard renders the value content. */}
                 <FeatureCard {...value} />
               </div>
             ))}

@@ -396,7 +396,7 @@
 }
 
 
-/* Container ko center karne aur standard width dene ke liye */
+/* Centers the container and keeps a standard content width. */
 .container {
   width: 100%;
   max-width: 1200px;       /* Yeh layout ko bohot zyada phailne se rokega */
@@ -407,30 +407,30 @@
   box-sizing: border-box;  /* Padding ko width ke andar hi adjust rakhega */
 }
 
-/* Page Hero section ko thoda sa saas lene ke liye padding */
+/* Adds comfortable spacing to the page hero section. */
 .page-hero {
   padding-top: 60px;
   padding-bottom: 40px;
-  background-color: #fbfbf9; /* Ek premium light background (optional, aap change kar sakte hain) */
+  background-color: #fbfbf9; /* Premium light background. */
 }
 
-/* Sections ke beech mein professional gap ke liye */
+/* Adds professional spacing between sections. */
 .section {
   padding-top: 60px;
   padding-bottom: 60px;
 }
 
-/* Eyebrow text (jaise PRODUCT CATALOG) ko thoda premium look dene ke liye */
+/* Gives eyebrow text a premium look. */
 .eyebrow {
   display: block;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: #c5a880; /* Premium gold tint, wellness brands ke liye accha lagta hai */
+  color: #c5a880; /* Premium gold tint for wellness brands. */
   margin-bottom: 12px;
 }
 
-/* Product Card ke grid ko thoda set karne ke liye (agar abhi tak nahi kiya hai) */
+/* Product card grid layout. */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -445,7 +445,7 @@
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 1000; /* Z-index badha diya taaki hamesha top par rahe */
+  z-index: 1000; /* Keeps the modal above page content. */
   display: grid;
   place-items: center;
   padding: 1.5rem;
@@ -456,7 +456,7 @@
   inset: 0;
   border: 0;
   background: rgba(16, 16, 15, 0.65);
-  backdrop-filter: blur(6px); /* Background content thoda blur hoga toh premium dikhega */
+  backdrop-filter: blur(6px); /* Softens background content behind the modal. */
   cursor: pointer;
 }
 
@@ -465,13 +465,13 @@
   width: min(100%, 540px);
   max-height: min(92vh, 780px);
   overflow: auto;
-  padding: 2.5rem; /* Padding thodi badhayi space behtar karne ke liye */
+  padding: 2.5rem; /* Adds comfortable internal spacing. */
   border-radius: var(--radius, 12px);
   
   /* CRITICAL FIX: Fallback background color lagaya agar CSS variable fail ho jaye */
   background: var(--color-surface, #fdfbf7); 
   
-  /* Piche ka koi bhi text dekhne se block karne ke liye solid opacity fallback */
+  /* Solid fallback prevents background text from showing through. */
   background-color: #fdfbf7 !important; 
   
   box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.3), 0 10px 20px -5px rgba(0, 0, 0, 0.1);
@@ -495,7 +495,7 @@
 
 /* Heading Improvements inside Modal */
 .modal__panel h2 {
-  font-family: serif; /* Elegant look ke liye */
+  font-family: serif; /* Elegant look. */
   font-size: 1.85rem;
   margin-top: 0.25rem;
   margin-bottom: 0.5rem;
@@ -534,7 +534,7 @@
   width: 100%;
   border: 1px solid #dcd7cc;
   border-radius: var(--radius, 6px);
-  background: #ffffff; /* Inputs ko pure white kiya readability ke liye */
+  background: #ffffff; /* Pure white inputs improve readability. */
   color: #171411;
   padding: 0.85rem 1rem;
   font-size: 0.95rem;
@@ -673,7 +673,7 @@
   }
 
   .form__row {
-    grid-template-columns: 1fr; /* Mobile par Name aur Phone ek ke niche ek aayenge */
+    grid-template-columns: 1fr; /* Stacks fields on mobile. */
     gap: 1.25rem;
   }
 

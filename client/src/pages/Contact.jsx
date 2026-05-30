@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Phone, Mail, MapPin, Send, CheckCircle } from "lucide-react";
+import { contactApi } from "../api/http";
 
 const Contact = () => {
   const [form, setForm] = useState({
@@ -25,11 +26,16 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // API call yaha lagana hai
+      // Submit the contact request through the API.
+      await contactApi.createContact(form);
+
       setStatus({
         type: "success",
         message: "Your enquiry has been submitted successfully.",
       });
+
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setStatus({ type: "", message: "" }), 3000);
 
       setForm({
         name: "",
