@@ -1,0 +1,39 @@
+name: Deploy Imperial Website
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          script: |
+            cd ~/Imperial-bathtub
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            cd backend
+            npm install
+
+            pm2 restart imperial-backend || pm2 start server.js --name imperial-backend
+
+            cd ../client
+            npm install
+            npm run build
+
+            sudo systemctl restart nginx
