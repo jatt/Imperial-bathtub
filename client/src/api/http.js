@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  // Vite Proxy use karne ke liye baseURL ko sirf "/api" rakhein.
-  // Agar env file se aa raha hai toh pehle wo check hoga.
+  // Keep the base URL as "/api" so the Vite proxy can handle requests.
+  // Environment configuration takes priority when it is provided.
   baseURL: import.meta.env.VITE_API_URL || "/api",
   headers: {
     "Content-Type": "application/json"
@@ -20,12 +20,14 @@ export const productApi = {
 };
 
 export const leadApi = {
-  // Ab ye sahi se /api/leads par POST request bhejega
-  createLead: (payload) => api.post("/leads", payload)
+  // Sends quote requests to the leads endpoint.
+  createLead: (payload) => api.post("/leads", payload),
+  getLeads: () => api.get("/leads")
 };
 
 export const contactApi = {
-  createContact: (payload) => api.post("/contact", payload)
+  createContact: (payload) => api.post("/contact", payload),
+  getContacts: () => api.get("/contact")
 };
 
 export const authApi = {

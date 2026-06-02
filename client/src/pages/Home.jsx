@@ -172,11 +172,17 @@ const Home = () => {
           </div>
           {isLoadingProducts ? (
             <LoadingSpinner label="Loading collection" />
-          ) : (
+          ) : products.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {products.slice(0, 6).map((product) => (
                 <ProductCard key={product._id || product.slug} product={product} />
               ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-ink/10 bg-ivory p-8 text-center">
+              <p className="text-sm font-semibold text-ink/70">
+                No products are listed in our catalog at the moment. Please request pricing or contact us directly to explore custom requirements.
+              </p>
             </div>
           )}
         </div>
@@ -241,24 +247,22 @@ const Home = () => {
       </AnimatedSection>
 
       {/* Testimonials */}
-      <AnimatedSection id="testimonials" className="section-padding bg-ivory">
-        <div className="container-shell">
-          <SectionHeading
-            eyebrow="Testimonials"
-            title="Trusted by homeowners, designers, and hospitality teams."
-            text="Real-world feedback shaped into a clean carousel experience for premium social proof."
-          />
-          <div className="mt-10">
-            {isLoadingTestimonials ? (
-              <LoadingSpinner label="Loading reviews" />
-            ) : (
+      {!isLoadingTestimonials && testimonials.length > 0 && (
+        <AnimatedSection id="testimonials" className="section-padding bg-ivory">
+          <div className="container-shell">
+            <SectionHeading
+              eyebrow="Testimonials"
+              title="Trusted by homeowners, designers, and hospitality teams."
+              text="Real-world feedback shaped into a clean carousel experience for premium social proof."
+            />
+            <div className="mt-10">
               <TestimonialCarousel testimonials={testimonials} />
-            )}
+            </div>
           </div>
-        </div>
-      </AnimatedSection>
+        </AnimatedSection>
+      )}
 
-      {/* Team Section (Yahan se In aur Ig boxes remove ho gaye hain) */}
+      {/* Team Section */}
       <AnimatedSection id="team" className="section-padding bg-white">
         <div className="container-shell">
           <SectionHeading
@@ -284,7 +288,7 @@ const Home = () => {
                   <p className="mt-1 text-sm uppercase tracking-[0.2em] text-gold">
                     {member.role}
                   </p>
-                  {/* Social links block ko yahan se remove kar diya hai */}
+                  {/* Social links are not shown in this card. */}
                 </div>
               </article>
             ))}

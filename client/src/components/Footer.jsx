@@ -12,25 +12,25 @@ import logo from "../assets/imperial_logo.png";
 
 
 const Footer = () => {
-  // Social media links aur icons ka array banaya taaki har ek par sahi link kaam kare
+  // Social media links and icons.
   const socialLinks = [
-    { Icon: FaFacebookF, url: "https://www.facebook.com/share/1Ctkc7w4eh/?mibextid=wwXIfr" }, // Apni Facebook profile ka link '#' ki jagah daal dena
+    { Icon: FaFacebookF, url: "https://www.facebook.com/share/1Ctkc7w4eh/?mibextid=wwXIfr" },
     { Icon: FaInstagram, url: "https://www.instagram.com/imperialbathsolution?igsh=ZWE4YXprNGF1YzNu&utm_source=ig_contact_invite" },
-    // { Icon: FaLinkedinIn, url: "#" } // Apni LinkedIn profile ka link '#' ki jagah daal dena
+    // { Icon: FaLinkedinIn, url: "#" }
   ];
 
   return (
     <footer className="bg-[#0f172a] text-white">
 
-      <div className="max-w-7xl mx-auto px-6 py-14 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+      <div className="max-w-7xl mx-auto px-6 py-14 flex flex-col md:grid md:grid-cols-2 lg:flex lg:flex-row lg:justify-between gap-12">
 
         {/* BRAND */}
-        <div>
+        <div className="max-w-sm">
           <Link to="/" className="flex items-center gap-3">
             <img
-              src={logo} // Yahan bina quotes ke variable pass hoga
+              src={logo}
               alt="Imperial Logo"
-              className="h-[80px] w-[80px] object-contain ml-[-30px]"
+              className="h-[80px] w-[80px] object-contain"
             />
             {/* </div> */}
             <h1 className="text-2xl md:text-2xl font-display font-extrabold tracking-wide text-[#D4AF37] drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
@@ -81,14 +81,14 @@ const Footer = () => {
         </div>
 
         {/* CONTACT */}
-        <div>
+        <div className="max-w-sm">
           <h3 className="text-lg font-semibold mb-4 text-white">Contact</h3>
 
           <div className="space-y-4 text-gray-400 text-sm">
 
             {/* Address Section - Icon aligned beautifully */}
             <div className="flex gap-3 items-start">
-              {/* Icon size 22 kiya aur mt-1 se pehli line ke sath align kiya */}
+              {/* Icon is aligned with the first address line. */}
               <MapPin size={22} className="text-yellow-400 mt-1 shrink-0" />
               <span className="leading-relaxed">
                 Hanuman Tikri, Ward No. 24<br />

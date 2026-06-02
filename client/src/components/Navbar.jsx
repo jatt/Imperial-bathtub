@@ -60,7 +60,7 @@ const Navbar = ({ onQuoteClick }) => {
           )}
         </div>
 
-        {/* Desktop Buttons Section (Chat Us aur Get Quote dono box mein) */}
+        {/* Desktop action buttons */}
         <div className="flex items-center gap-3">
           {/* Chat Us Box Button (Desktop) */}
           <a 
@@ -139,7 +139,7 @@ const Navbar = ({ onQuoteClick }) => {
               Login
             </NavLink>
 
-            {/* Mobile View Buttons (Done full width box mein dikhenge) */}
+            {/* Mobile action buttons */}
             <div className="flex flex-col gap-2 mt-2">
               <a 
                 href={whatsappLink}

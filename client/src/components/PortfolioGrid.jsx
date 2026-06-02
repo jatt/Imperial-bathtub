@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 
-const filters = ["all", "modern", "classic", "spa"];
+const filters = ["all", "modern", "classic", "spa", ];
 
 const PortfolioGrid = ({ projects }) => {
   const [activeFilter, setActiveFilter] = useState("all");

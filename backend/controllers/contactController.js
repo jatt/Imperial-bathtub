@@ -1,5 +1,11 @@
 import Contact from "../models/Contact.js";
+
 import asyncHandler from "../middleware/asyncHandler.js";
+
+export const getContacts = asyncHandler(async (req, res) => {
+  const contacts = await Contact.find().sort({ createdAt: -1 });
+  res.json(contacts);
+});
 
 export const createContact = asyncHandler(async (req, res) => {
   const { name, email, phone, message } = req.body;

@@ -18,7 +18,7 @@ export default function ProductManagement() {
   const fetchProducts = () => {
     fetch("http://localhost:5000/api/admin/dashboard", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
-      // Yahan aap dashboard stats se alag list endpoint bhi fetch kar sakte hain
+      // A dedicated list endpoint can be used here if needed.
   };
 
   const handleFormSubmit = async (e) => {
@@ -45,7 +45,7 @@ export default function ProductManagement() {
     try {
       const response = await fetch("http://localhost:5000/api/admin/products", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }, // Form-data me content-type khud set hota hai file boundaries ke sath
+        headers: { Authorization: `Bearer ${token}` },
         body: formData
       });
       const data = await response.json();

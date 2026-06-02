@@ -31,6 +31,8 @@ const QuoteModal = ({ isOpen, onClose }) => {
       await leadApi.createLead({ ...form, source: "quote-modal" });
       setStatus("success");
       setForm(initialState);
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setStatus("idle"), 3000);
     } catch (apiError) {
       setStatus("error");
       setError(apiError.response?.data?.message || "Could not submit the form.");
@@ -71,7 +73,7 @@ const QuoteModal = ({ isOpen, onClose }) => {
           </label>
           <label>
             Name of the products
-            <input name="product" value={form.product} onChange={handleChange} />
+            <input name="interest" value={form.interest} onChange={handleChange} />
           </label>
           <label>
             Message/ Your Query
