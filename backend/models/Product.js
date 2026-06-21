@@ -26,16 +26,16 @@ const productSchema = new mongoose.Schema(
     //   default: "bathtubs",
     // },
     category: {
-  type: String,
-  enum: [
-    "bathtubs",
-    "jacuzzi",
-    "shower-solutions",
-    "wellness",
-    "faucets-accessories"
-  ],
-  default: "bathtubs"
-},
+      type: String,
+      enum: [
+        "bathtubs",
+        "jacuzzi",
+        "shower-solutions",
+        "wellness",
+        "faucets-accessories"
+      ],
+      default: "bathtubs"
+    },
 
     size: {
       type: String,
@@ -72,6 +72,11 @@ const productSchema = new mongoose.Schema(
     image: {
       type: String,
       default: "",
+    },
+
+    gallery: {
+      type: [String],
+      default: [],
     },
   },
   {

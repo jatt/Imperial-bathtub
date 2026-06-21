@@ -2,3 +2,17 @@
 - [x] Add Load More button and append next 6 products per click
 - [x] Preserve fallback/cache behavior for initial load and errors
 - [x] Verify implementation consistency in Home.jsx
+- [x] Pass return-route state from ProductCard to ProductDetails
+- [x] Make ProductDetails back button return to Home #jacuzzi section
+- [ ] Verify back navigation behavior update
+- [x] Add WhatsApp and Call icons in ProductCard only
+- [x] Verify ProductCard layout after adding icons
+- [x] Main Product Image input set to single file
+- [x] Main Product Image required in add mode, optional in edit mode
+- [x] Added separate Additional Images input (always optional)
+- [x] Additional Images limited to max 10 files
+- [x] Submit main image as `image` and additional images as `gallery`
+- [ ] Change ProductDetails section title from "Related Products" to "Other Photos"
+- [ ] Show current product's own gallery images in that section
+- [ ] Make gallery thumbnails clickable to update main image
+- [ ] Remove product title display from thumbnails

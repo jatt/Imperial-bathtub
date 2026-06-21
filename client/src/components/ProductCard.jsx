@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { FaWhatsapp, FaPhoneAlt } from "react-icons/fa";
 
 // Premium Product Card – uses Tailwind CSS for a sleek, responsive design.
 // Features:
@@ -43,10 +44,10 @@ const ProductCard = ({ product, onQuoteClick }) => {
         <p className="mt-3 text-sm text-ink/65 leading-6" title={description}>
           {truncatedDescription}
         </p>
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <Link
             to={`/products/${product.slug || product._id}`}
-            state={{ product }}
+            state={{ product, fromPath: "/", fromHash: "#jacuzzi" }}
             className="inline-flex items-center justify-center rounded-full border border-ink/10 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/5"
           >
             View Details
@@ -58,6 +59,26 @@ const ProductCard = ({ product, onQuoteClick }) => {
           >
             Get Quote
           </button>
+          <div className="ml-auto flex items-center gap-2">
+            <a
+              href={`https://wa.me/916201986245?text=${encodeURIComponent(
+                `Hello Imperial Bath Solutions, I'm interested in ${name}`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Chat on WhatsApp about ${name}`}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-600"
+            >
+              <FaWhatsapp size={18} />
+            </a>
+            <a
+              href="tel:+916201986245"
+              aria-label="Call Imperial Bath Solutions"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700"
+            >
+              <FaPhoneAlt size={16} />
+            </a>
+          </div>
         </div>
       </div>
     </article>

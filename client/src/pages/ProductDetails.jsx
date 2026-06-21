@@ -24,6 +24,8 @@ const categoryLabels = {
 const ProductDetails = ({ onQuoteClick }) => {
   const { slug } = useParams();
   const location = useLocation();
+  const backPath = location.state?.fromPath || "/";
+  const backHash = location.state?.fromHash || "";
 
   const [product, setProduct] = useState(() => {
     const routeProduct = location.state?.product;
@@ -127,13 +129,16 @@ const ProductDetails = ({ onQuoteClick }) => {
   }, [slug, retryCount, location.state]);
 
   const displayDescription = product.shortDescription || product.description || "";
+  const otherPhotos = Array.from(
+    new Set([product.image, ...(Array.isArray(product.gallery) ? product.gallery : [])].filter(Boolean))
+  );
 
   return (
     <>
       {/* BACK BUTTON */}
       <section className="bg-ink py-6 text-white">
         <div className="container">
-          <Link to="/" className="flex items-center gap-2 w-fit">
+          <Link to={`${backPath}${backHash}`} className="flex items-center gap-2 w-fit">
             <ArrowLeft size={16} /> Back
           </Link>
         </div>
@@ -142,7 +147,7 @@ const ProductDetails = ({ onQuoteClick }) => {
       {/* PRODUCT DETAIL */}
       <section className="py-10">
         <div className="container grid md:grid-cols-2 gap-10">
-          
+
           {/* IMAGE */}
           <div>
             <img
@@ -204,29 +209,30 @@ const ProductDetails = ({ onQuoteClick }) => {
         </div>
       </section>
 
-      {/* RELATED PRODUCTS */}
+      {/* OTHER PHOTOS */}
       <section className="py-10 bg-gray-50">
         <div className="container">
           <h2 className="text-2xl font-bold mb-6">
-            Related Products
+            Other Photos
           </h2>
 
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {relatedProducts.map((item) => (
-              <Link key={item.slug} to={`/products/${item.slug}`} className="group">
-                <div className="border bg-white p-4 rounded h-full transition-shadow group-hover:shadow-md">
-                  <div className="h-48 flex items-center justify-center overflow-hidden rounded bg-gray-50">
-                    <img 
-                      src={item.image} 
-                      alt={item.title} 
-                      className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="mt-3 font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                    {item.title}
-                  </h3>
+            {otherPhotos.map((photo, index) => (
+              <button
+                key={`${photo}-${index}`}
+                type="button"
+                onClick={() => setActiveImage(photo)}
+                className={`group border bg-white p-4 rounded h-full transition-shadow text-left ${activeImage === photo ? "ring-2 ring-gold shadow-md" : "hover:shadow-md"
+                  }`}
+              >
+                <div className="h-48 flex items-center justify-center overflow-hidden rounded bg-gray-50">
+                  <img
+                    src={photo}
+                    alt={`${product.title || product.name} photo ${index + 1}`}
+                    className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
+                  />
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>

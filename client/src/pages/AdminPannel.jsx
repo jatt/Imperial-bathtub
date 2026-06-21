@@ -12,8 +12,6 @@ import {
   Save,
   Search,
   Sparkles,
-  User,
-  MessageSquare,
   Calendar,
   Tag,
 } from "lucide-react";
@@ -85,6 +83,7 @@ const initialForms = {
     features: "",
     status: "active",
     image: "",
+    gallery: [],
   },
   testimonials: {
     name: "",
@@ -157,18 +156,6 @@ const imageAcceptTypes = [
   ".heif",
 ].join(",");
 
-const StatusBadge = ({ status }) => {
-  const colors = {
-    new: "bg-blue-100 text-blue-700",
-    contacted: "bg-amber-100 text-amber-700",
-    closed: "bg-green-100 text-green-700",
-  };
-  return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${colors[status] || "bg-gray-100 text-gray-600"}`}>
-      {status || "new"}
-    </span>
-  );
-};
 
 const FormattedDate = ({ iso }) => {
   if (!iso) return null;
@@ -221,7 +208,9 @@ const AdminPannel = () => {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [imageFileName, setImageFileName] = useState("");
+  const [galleryFileNames, setGalleryFileNames] = useState([]);
   const imageInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
   const successTimeoutRef = useRef(null);
 
   const hasImageField = useMemo(() => ["products", "testimonials", "gallery", "team"].includes(activeModule), [activeModule]);
@@ -321,10 +310,14 @@ const AdminPannel = () => {
     setForms((current) => ({ ...current, [activeModule]: initialForms[activeModule] }));
     setEditingId(null);
     setImageFileName("");
+    setGalleryFileNames([]);
     setError("");
     setStatus("idle");
     if (imageInputRef.current) {
       imageInputRef.current.value = "";
+    }
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = "";
     }
   };
 
@@ -335,6 +328,7 @@ const AdminPannel = () => {
     setError("");
     setStatus("idle");
     setImageFileName("");
+    setGalleryFileNames([]);
     setIsSidebarOpen(false);
 
     if (module === "dashboard") {
@@ -387,6 +381,39 @@ const AdminPannel = () => {
     reader.readAsDataURL(file);
   };
 
+  const handleGalleryFilesChange = (event) => {
+    const files = Array.from(event.target.files || []);
+
+    if (files.length > 10) {
+      setError("You can upload maximum 10 other photos.");
+      event.target.value = "";
+      setForms((current) => ({
+        ...current,
+        products: { ...current.products, gallery: [] },
+      }));
+      setGalleryFileNames([]);
+      return;
+    }
+
+    const readPromises = files.map(
+      (file) =>
+        new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        })
+    );
+
+    Promise.all(readPromises).then((imagesBase64) => {
+      setForms((current) => ({
+        ...current,
+        products: { ...current.products, gallery: imagesBase64.filter(Boolean) },
+      }));
+      setGalleryFileNames(files.map((file) => file.name));
+      setError("");
+    });
+  };
+
   const syncProductCatalogCache = (nextProducts) => {
     const list = Array.isArray(nextProducts) ? nextProducts : [];
     saveCachedProducts("all", list);
@@ -405,10 +432,10 @@ const AdminPannel = () => {
         mode === "delete"
           ? currentProducts.filter((item) => item._id !== product._id)
           : mode === "update"
-          ? currentProducts.some((item) => item._id === product._id)
-            ? currentProducts.map((item) => (item._id === product._id ? product : item))
-            : [product, ...currentProducts]
-          : [product, ...currentProducts.filter((item) => item._id !== product._id)];
+            ? currentProducts.some((item) => item._id === product._id)
+              ? currentProducts.map((item) => (item._id === product._id ? product : item))
+              : [product, ...currentProducts]
+            : [product, ...currentProducts.filter((item) => item._id !== product._id)];
 
       if (canSyncCache) {
         syncProductCatalogCache(nextProducts);
@@ -585,6 +612,7 @@ const AdminPannel = () => {
     setStatus("idle");
     setError("");
     setImageFileName("");
+    setGalleryFileNames(Array.isArray(nextForm.gallery) ? nextForm.gallery.map((_, idx) => `Other Photo ${idx + 1}`) : []);
     window.location.hash = "add-item";
   };
 
@@ -631,7 +659,7 @@ const AdminPannel = () => {
         <>
           <label className="text-sm font-semibold text-ink">
             Name
-            <input name="name" value={forms.products.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+            <input name="name" value={forms.products.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" />
           </label>
           <label className="text-sm font-semibold text-ink">
             Category
@@ -643,11 +671,11 @@ const AdminPannel = () => {
           </label>
           <label className="text-sm font-semibold text-ink">
             Size
-            <input name="size" value={forms.products.size} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+            <input name="size" value={forms.products.size} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" />
           </label>
           <label className="text-sm font-semibold text-ink">
             Price
-            <input name="price" value={forms.products.price} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+            <input name="price" value={forms.products.price} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" />
           </label>
           {/* <label className="text-sm font-semibold text-ink sm:col-span-2">
             Short Description
@@ -655,9 +683,9 @@ const AdminPannel = () => {
           </label> */}
           <label className="text-sm font-semibold text-ink sm:col-span-2">
             Description
-            <textarea name="description" value={forms.products.description} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" rows={4}  />
+            <textarea name="description" value={forms.products.description} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" rows={4} />
           </label>
-          
+
           <label className="text-sm font-semibold text-ink">
             Status
             <select name="status" value={forms.products.status} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink">
@@ -674,11 +702,11 @@ const AdminPannel = () => {
         <>
           <label className="text-sm font-semibold text-ink">
             Name
-            <input name="name" value={forms.testimonials.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+            <input name="name" value={forms.testimonials.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" />
           </label>
           <label className="text-sm font-semibold text-ink">
             Location
-            <input name="location" value={forms.testimonials.location} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+            <input name="location" value={forms.testimonials.location} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" />
           </label>
           <label className="text-sm font-semibold text-ink">
             Rating
@@ -1337,8 +1365,8 @@ const AdminPannel = () => {
                         {editingId
                           ? "Update the selected item details."
                           : activeAction === "manage"
-                          ? "Review current items and edit or delete entries from this section."
-                          : "Use the form to add or update website content for the selected section."}
+                            ? "Review current items and edit or delete entries from this section."
+                            : "Use the form to add or update website content for the selected section."}
                       </p>
                     </div>
                   </div>
@@ -1355,14 +1383,31 @@ const AdminPannel = () => {
                           accept={imageAcceptTypes}
                           onChange={handleImageFileChange}
                           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
-                          // required=
-                          // required={false}
                           required={activeModule === "products" && !editingId}
                         />
                       </label>
                     )}
 
-                    {imageFileName && <p className="text-xs text-ink/70 sm:col-span-2">Selected: {imageFileName}</p>}
+                    {activeModule === "products" && (
+                      <label className="text-sm font-semibold text-ink sm:col-span-2">
+                        Other Photos (Optional, max 10)
+                        <input
+                          ref={galleryInputRef}
+                          type="file"
+                          accept={imageAcceptTypes}
+                          multiple
+                          onChange={handleGalleryFilesChange}
+                          className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+                        />
+                      </label>
+                    )}
+
+                    {imageFileName && <p className="text-xs text-ink/70 sm:col-span-2">Selected main image: {imageFileName}</p>}
+                    {activeModule === "products" && galleryFileNames.length > 0 && (
+                      <p className="text-xs text-ink/70 sm:col-span-2">
+                        Selected other photos: {galleryFileNames.join(", ")}
+                      </p>
+                    )}
                     {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
                     {status === "success" && <p className="text-sm text-green-700 sm:col-span-2">{editingId ? "Updated successfully." : "Added successfully."}</p>}
 

@@ -19,7 +19,7 @@ export const getProducts = asyncHandler(async (req, res) => {
 
   if (!fields) {
     query = query.select(
-      "name slug image category size price shortDescription status"
+      "name slug image gallery category size price shortDescription status"
     );
   } else {
     query = query.select(
@@ -62,7 +62,7 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
     })
       .limit(Number(relatedLimit))
       .select(
-        "name slug image category size price shortDescription status"
+        "name slug image gallery category size price shortDescription status"
       )
       .lean();
 
@@ -92,7 +92,7 @@ export const getProductById = asyncHandler(async (req, res) => {
     })
       .limit(Number(relatedLimit))
       .select(
-        "name slug image category size price shortDescription status"
+        "name slug image gallery category size price shortDescription status"
       )
       .lean();
 
@@ -171,6 +171,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     features,
     status,
     image,
+    gallery,
   } = req.body;
 
   if (!name || !description) {
@@ -184,6 +185,12 @@ export const createProduct = asyncHandler(async (req, res) => {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
 
+  const parsedGallery = Array.isArray(gallery)
+    ? gallery.filter(Boolean)
+    : typeof gallery === "string" && gallery.trim() !== ""
+      ? [gallery]
+      : [];
+
   const product = await Product.create({
     name,
     slug,
@@ -194,12 +201,13 @@ export const createProduct = asyncHandler(async (req, res) => {
     description,
     features: features
       ? String(features)
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
       : [],
     status: status === "inactive" ? "inactive" : "active",
     image: image || "",
+    gallery: parsedGallery,
   });
 
   res.status(201).json(product);
@@ -330,6 +338,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
     features,
     status,
     image,
+    gallery,
   } = req.body;
 
   const product = await Product.findById(id);
@@ -383,6 +392,16 @@ export const updateProduct = asyncHandler(async (req, res) => {
   // Image completely optional
   if (image !== undefined && image !== "") {
     product.image = image;
+  }
+
+  if (gallery !== undefined) {
+    if (Array.isArray(gallery)) {
+      product.gallery = gallery.filter(Boolean);
+    } else if (typeof gallery === "string") {
+      product.gallery = gallery.trim() ? [gallery] : [];
+    } else {
+      product.gallery = [];
+    }
   }
 
   const updatedProduct = await product.save();

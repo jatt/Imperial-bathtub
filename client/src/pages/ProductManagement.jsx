@@ -1,11 +1,7 @@
-import { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import api from "../api/http";
+import { useState } from "react";
 
 export default function ProductManagement() {
-  const { token } = useContext(AuthContext);
-
-  const [products, setProducts] = useState([]);
+  const [editingId] = useState(null);
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("bathtubs");
@@ -16,30 +12,8 @@ export default function ProductManagement() {
   const [features, setFeatures] = useState("");
 
   const [image, setImage] = useState(null);
+  const [additionalImages, setAdditionalImages] = useState([]);
 
-  const fetchProducts = async () => {
-    try {
-      const response = await api.get("/products", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          limit: 100,
-          page: 1,
-        },
-      });
-
-      setProducts(response.data || []);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-    }
-  };
-
-  useEffect(() => {
-    if (token) {
-      fetchProducts();
-    }
-  }, [token]);
 
   // const handleFormSubmit = async (e) => {
   //   e.preventDefault();
@@ -113,10 +87,23 @@ export default function ProductManagement() {
       formData.append("features", features);
     }
 
-    // Image Optional
+    if (!editingId && !image) {
+      alert("Product image is required.");
+      return;
+    }
+
     if (image) {
       formData.append("image", image);
     }
+
+    if (additionalImages.length > 10) {
+      alert("You can upload maximum 10 additional images.");
+      return;
+    }
+
+    additionalImages.forEach((file) => {
+      formData.append("gallery", file);
+    });
 
     try {
       const response = await fetch("http://localhost:5000/api/products", {
@@ -171,7 +158,7 @@ export default function ProductManagement() {
 
         {/* Size */}
         <div>
-          <label className="block text-sm font-medium">Size *</label>
+          <label className="block text-sm font-medium">Size {!editingId ? "*" : ""}</label>
 
           <input
             type="text"
@@ -185,7 +172,7 @@ export default function ProductManagement() {
 
         {/* Price */}
         <div>
-          <label className="block text-sm font-medium">Price *</label>
+          <label className="block text-sm font-medium">Price {!editingId ? "*" : ""}</label>
 
           <input
             type="text"
@@ -211,7 +198,7 @@ export default function ProductManagement() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium">Description *</label>
+          <label className="block text-sm font-medium">Description {!editingId ? "*" : ""}</label>
 
           <textarea
             className="w-full p-2 border rounded h-32"
@@ -233,18 +220,49 @@ export default function ProductManagement() {
           />
         </div>
 
-        {/* Image Optional */}
+        {/* Main Product Image */}
         <div>
           <label className="block text-sm font-medium">
-            Product Image (Optional)
+            Product Image {!editingId ? "*" : "(Optional)"}
           </label>
 
           <input
             type="file"
             className="w-full"
             accept="image/*"
-            onChange={(e) => setImage(e.target.files[0])}
+            required={!editingId}
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
           />
+          <p className="mt-1 text-xs text-gray-500">
+            Upload one main product image.
+          </p>
+        </div>
+
+        {/* Additional Images (Optional) */}
+        <div>
+          <label className="block text-sm font-medium">
+            Additional Images (Optional, max 10)
+          </label>
+
+          <input
+            type="file"
+            className="w-full"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              const selectedFiles = Array.from(e.target.files || []);
+              if (selectedFiles.length > 10) {
+                alert("You can upload maximum 10 additional images.");
+                e.target.value = "";
+                setAdditionalImages([]);
+                return;
+              }
+              setAdditionalImages(selectedFiles);
+            }}
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Optional gallery images. Maximum 10 files.
+          </p>
         </div>
 
         <button
