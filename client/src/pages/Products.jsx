@@ -1,37 +1,90 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { productApi } from "../api/http";
-import { fallbackProducts } from "../assets/placeholderData";
 import CTA from "../components/CTA";
-import LoadingSpinner from "../components/LoadingSpinner";
 import ProductCard from "../components/ProductCard";
 import SectionHeader from "../components/SectionHeader";
+import {
+  filterCatalog,
+  getImmediateProducts,
+  saveCachedProducts,
+} from "../utils/productCatalog";
 
-const filters = ["all", "jacuzzi", "sauna", "steam", "spa"];
+const filters = [
+  { key: "all", label: "All Products" },
+  { key: "bathtubs", label: "Bathtubs" },
+  { key: "shower-solutions", label: "Shower Solutions" },
+  { key: "wellness", label: "Wellness & Spa" },
+  { key: "faucets-accessories", label: "Faucets & Accessories" },
+];
+
+const validFilterKeys = new Set(filters.map((filter) => filter.key));
+
+const getFilterFromSearch = (search) => {
+  const params = new URLSearchParams(search);
+  const category = params.get("category");
+  return validFilterKeys.has(category) ? category : "all";
+};
 
 const Products = ({ onQuoteClick }) => {
-  const [products, setProducts] = useState([]);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  const [products, setProducts] = useState(() => getImmediateProducts(getFilterFromSearch(location.search)));
+  const [activeFilter, setActiveFilter] = useState(() => getFilterFromSearch(location.search));
+  const [isFetching, setIsFetching] = useState(false);
+  const [page, setPage] = useState(1);
+  const perPage = 12;
+  const [total, setTotal] = useState(() => getImmediateProducts(getFilterFromSearch(location.search)).length);
 
   useEffect(() => {
+    const nextFilter = getFilterFromSearch(location.search);
+    setActiveFilter((current) => (current === nextFilter ? current : nextFilter));
+    setPage(1);
+    const immediate = getImmediateProducts(nextFilter);
+    setProducts(immediate);
+    setTotal(immediate.length);
+  }, [location.search]);
+
+  useEffect(() => {
+    let active = true;
     const loadProducts = async () => {
+      setIsFetching(true);
       try {
-        const response = await productApi.getProducts();
-        setProducts(response.data.length ? response.data : fallbackProducts);
+        const params = {
+          ...(activeFilter === "all" ? {} : { category: activeFilter }),
+          limit: perPage,
+          page,
+        };
+
+        const response = await productApi.getProducts(params);
+        if (!active) return;
+
+        const data = Array.isArray(response.data) ? response.data : [];
+        const totalCount = Number(response.headers["x-total-count"] || 0);
+        setProducts((current) => {
+          const nextProducts = page === 1 ? data : [...current, ...data];
+          saveCachedProducts(activeFilter, nextProducts);
+          return nextProducts;
+        });
+        setTotal(totalCount);
       } catch {
-        setProducts(fallbackProducts);
+        if (!active) return;
+        if (page === 1) {
+          const fallback = filterCatalog(getImmediateProducts(activeFilter), activeFilter);
+          setProducts(fallback);
+          saveCachedProducts(activeFilter, fallback);
+          setTotal(fallback.length);
+        }
       } finally {
-        setIsLoading(false);
+        if (!active) return;
+        setIsFetching(false);
       }
     };
 
     loadProducts();
-  }, []);
-
-  const visibleProducts = useMemo(() => {
-    if (activeFilter === "all") return products;
-    return products.filter((product) => product.category === activeFilter);
-  }, [activeFilter, products]);
+    return () => {
+      active = false;
+    };
+  }, [activeFilter, page]);
 
   return (
     <>
@@ -40,38 +93,67 @@ const Products = ({ onQuoteClick }) => {
           <span className="eyebrow">Product catalog</span>
           <h1>Premium Wellness Products</h1>
           <p>
-            Browse jacuzzi bathtubs, sauna rooms, steam rooms, and spa products
-            for refined wellness spaces.
+            Browse bathtubs, shower solutions, wellness and spa products,
+            faucets, and accessories for refined bathroom and wellness spaces.
           </p>
         </div>
       </section>
 
-      <section className="section">
+      <section id="product-catalog" className="section">
         <div className="container">
           <SectionHeader
             eyebrow="Explore models"
-            title="Product Range"
+            title="Premium Bath & Wellness Collection"
             text="Compare product styles, applications, and planning details before starting an enquiry."
           />
-          {/* <div className="filter-bar">
+          <div className="mb-8 flex flex-wrap gap-3">
             {filters.map((filter) => (
               <button
-                className={activeFilter === filter ? "active" : ""}
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
+                key={filter.key}
+                type="button"
+                onClick={() => {
+                  setActiveFilter(filter.key);
+                  setPage(1);
+                  const immediate = getImmediateProducts(filter.key);
+                  setProducts(immediate);
+                  setTotal(immediate.length);
+                }}
+                className={`px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] transition ${
+                  activeFilter === filter.key
+                    ? "bg-ink text-white"
+                    : "border border-ink/15 bg-white text-ink hover:border-ink"
+                }`}
               >
-                {filter}
+                {filter.label}
               </button>
             ))}
-          </div> */}
-          {isLoading ? (
-            <LoadingSpinner />
-          ) : visibleProducts.length > 0 ? (
-            <div className="product-grid">
-              {visibleProducts.map((product) => (
-                <ProductCard product={product} key={product._id || product.slug} />
-              ))}
-            </div>
+          </div>
+          {products.length > 0 ? (
+            <>
+              <div className="product-grid">
+                {products.map((product) => (
+                  <ProductCard
+                    product={product}
+                    key={product._id || product.slug}
+                    onQuoteClick={onQuoteClick}
+                  />
+                ))}
+              </div>
+
+              {/* Load more */}
+              {products.length < total && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={isFetching}
+                    className="px-6 py-3 rounded-full bg-ink text-white font-semibold hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Load more
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="rounded-2xl border border-ink/10 bg-white p-12 text-center my-6">
               <p className="text-sm font-semibold text-ink/75">

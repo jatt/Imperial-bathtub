@@ -4,8 +4,9 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
+    "dev": "node scripts/start-dev.js",
     "start": "node server.js",
+    "kill-backend": "powershell -NoProfile -Command \"$port=5000; $conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue; if ($conn) { Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue }; exit 0\"",
     "seed": "node seeders/seed.js"
   },
   "dependencies": {

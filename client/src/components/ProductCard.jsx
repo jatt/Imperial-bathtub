@@ -8,14 +8,14 @@ import { Link } from "react-router-dom";
 // • Optional "Read More" link (shows on hover).
 // • Accessible semantics and lazy loading.
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onQuoteClick }) => {
   const name = product.name || product.title || "";
   const size = product.size || product.dimension || "N/A";
-  const price = product.price || product.priceLabel || "On Request";
-  const description = product.description || product.shortDescription || "";
+  const price = product.price || product.priceLabel || "Starting Price on Request";
+  const description = product.shortDescription || product.description || "";
 
-  // Gracefully truncate a long description to 3 lines using line‑clamp (Tailwind plugin).
-  const truncatedDescription = description.length > 180 ? description.slice(0, 177) + "..." : description;
+  // Gracefully truncate long text to roughly two lines in this design.
+  const truncatedDescription = description.length > 140 ? description.slice(0, 137) + "..." : description;
 
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
@@ -25,7 +25,8 @@ const ProductCard = ({ product }) => {
           src={product.image}
           alt={name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
+          loading="eager"
+          decoding="async"
         />
         {/* Price badge */}
         <div className="absolute right-2 top-2 rounded-full bg-gold px-3 py-1 text-xs font-semibold text-ink shadow-md">
@@ -39,21 +40,28 @@ const ProductCard = ({ product }) => {
           {name}
         </h3>
         <p className="mt-2 text-sm font-medium text-ink/70">Size: {size}</p>
-        <p className="mt-3 text-sm text-ink/65 leading-6 line-clamp-3" title={description}>
+        <p className="mt-3 text-sm text-ink/65 leading-6" title={description}>
           {truncatedDescription}
         </p>
-        {/* Optional link to product details – shown on hover for better UX */}
-        <Link
-          to={`/products/${product._id}`}
-          className="mt-4 inline-block text-sm font-medium text-gold underline opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        >
-          Read more →
-        </Link>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            to={`/products/${product.slug || product._id}`}
+            state={{ product }}
+            className="inline-flex items-center justify-center rounded-full border border-ink/10 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/5"
+          >
+            View Details
+          </Link>
+          <button
+            type="button"
+            onClick={onQuoteClick}
+            className="inline-flex items-center justify-center rounded-full bg-gold px-4 py-2 text-sm font-semibold text-ink transition hover:bg-gold/90"
+          >
+            Get Quote
+          </button>
+        </div>
       </div>
     </article>
   );
 };
 
 export default ProductCard;
-
-

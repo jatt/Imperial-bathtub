@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
+  ChevronDown,
   ClipboardList,
   FileText,
   Layers,
   Mail,
+  Menu,
   Phone,
   PlusCircle,
   Save,
@@ -14,34 +17,125 @@ import {
   Calendar,
   Tag,
 } from "lucide-react";
-import { productApi, sectionItemApi, testimonialApi, leadApi, contactApi } from "../api/http";
+import { productApi, sectionItemApi, testimonialApi, leadApi, contactApi, settingsApi, adminApi } from "../api/http";
 import ProductCard from "../components/ProductCard";
+import { saveCachedProducts } from "../utils/productCatalog";
+import { getImmediateProducts } from "../utils/productCatalog";
 
-// ─── Modules (Buying Guide & About Us removed; two report sections added) ────
-const modules = [
-  { key: "products", label: "Add Products", type: "content" },
-  { key: "testimonials", label: "Testimonials", type: "content" },
-  { key: "projects", label: "Projects / Portfolio", type: "content" },
-  { key: "team", label: "Team", type: "content" },
-  { key: "quote-report", label: "Quote Report", type: "report" },
-  { key: "project-details-reports", label: "Project Details Reports", type: "report" },
+const sidebarSections = [
+  {
+    title: null,
+    items: [{ key: "dashboard", label: "Dashboard", module: "dashboard", icon: Layers }],
+  },
+  {
+    title: "Products",
+    items: [
+      { key: "products-add", label: "Add Product", module: "products", icon: PlusCircle },
+      { key: "products-manage", label: "Manage Products", module: "products", icon: FileText },
+    ],
+  },
+  {
+    title: "Gallery",
+    items: [
+      { key: "gallery-add", label: "Add Image", module: "gallery", icon: PlusCircle },
+      { key: "gallery-manage", label: "Manage Gallery", module: "gallery", icon: FileText },
+    ],
+  },
+  {
+    title: "Testimonials",
+    items: [
+      { key: "testimonials-add", label: "Add Testimonial", module: "testimonials", icon: PlusCircle },
+      { key: "testimonials-manage", label: "Manage Testimonials", module: "testimonials", icon: FileText },
+    ],
+  },
+  {
+    title: "Team",
+    items: [
+      { key: "team-add", label: "Add Member", module: "team", icon: PlusCircle },
+      { key: "team-manage", label: "Manage Team", module: "team", icon: FileText },
+    ],
+  },
+  {
+    title: "Enquiries",
+    items: [
+      { key: "contact-enquiries", label: "Contact Us", module: "contact-enquiries", icon: Mail },
+      { key: "quote-enquiries", label: "Get Quote", module: "quote-enquiries", icon: ClipboardList },
+    ],
+  },
+  /*
+  {
+    title: "Settings",
+    items: [
+      { key: "settings-company", label: "Company Details", module: "settings", icon: Search },
+      { key: "settings-social", label: "Social Media Links", module: "settings", icon: MessageSquare },
+      { key: "settings-whatsapp", label: "WhatsApp Number", module: "settings", icon: Phone },
+    ],
+  },
+  */
 ];
 
 const initialForms = {
-  products: { name: "", size: "", price: "", description: "", image: "" },
-  testimonials: { name: "", role: "", location: "", image: "", review: "", rating: 5 },
-  projects: { title: "", category: "", image: "", section: "projects" },
-  team: { name: "", role: "", image: "", section: "team" },
+  products: {
+    name: "",
+    category: "bathtubs",
+    size: "",
+    price: "",
+    shortDescription: "",
+    description: "",
+    features: "",
+    status: "active",
+    image: "",
+  },
+  testimonials: {
+    name: "",
+    location: "",
+    image: "",
+    review: "",
+    rating: 5,
+    status: "active",
+  },
+  gallery: {
+    title: "",
+    category: "bathtubs",
+    image: "",
+    section: "projects",
+  },
+  team: {
+    name: "",
+    role: "",
+    image: "",
+    section: "team",
+  },
+  settings: {
+    companyName: "",
+    phone: "",
+    email: "",
+    address: "",
+    whatsappNumber: "",
+    instagram: "",
+    facebook: "",
+    footerText: "",
+    logo: "",
+  },
 };
 
 const cardTitles = {
-  products: "Add Products",
+  dashboard: "Dashboard",
+  products: "Products",
+  gallery: "Gallery",
   testimonials: "Testimonials",
-  projects: "Projects / Portfolio",
   team: "Team",
-  "quote-report": "Quote Report",
-  "project-details-reports": "Project Details Reports",
+  "contact-enquiries": "Contact Enquiries",
+  "quote-enquiries": "Quote Requests",
+  settings: "Settings",
 };
+
+const categories = [
+  { value: "bathtubs", label: "Bathtubs" },
+  { value: "shower-solutions", label: "Shower Solutions" },
+  { value: "wellness", label: "Wellness & Spa" },
+  { value: "faucets-accessories", label: "Faucets & Accessories" },
+];
 
 const imageAcceptTypes = [
   "image/*",
@@ -63,7 +157,6 @@ const imageAcceptTypes = [
   ".heif",
 ].join(",");
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
   const colors = {
     new: "bg-blue-100 text-blue-700",
@@ -77,7 +170,6 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ─── Formatted Date ───────────────────────────────────────────────────────────
 const FormattedDate = ({ iso }) => {
   if (!iso) return null;
   const d = new Date(iso);
@@ -89,248 +181,187 @@ const FormattedDate = ({ iso }) => {
   );
 };
 
-// ─── Quote Report Row ─────────────────────────────────────────────────────────
-const QuoteReportRow = ({ item, index }) => (
-  <div className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/20 text-xs font-bold text-gold">
-          #{index + 1}
-        </span>
-        <div>
-          <p className="font-bold text-ink">{item.name}</p>
-          <p className="text-xs text-ink/60">{item.email}</p>
-        </div>
-      </div>
-      <StatusBadge status={item.status} />
-    </div>
-    <div className="grid gap-2 sm:grid-cols-2 text-sm text-ink/70">
-      {item.phone && (
-        <div className="flex items-center gap-1.5">
-          <Phone size={13} className="text-gold shrink-0" />
-          <span>{item.phone}</span>
-        </div>
-      )}
-      {item.interest && (
-        <div className="flex items-center gap-1.5">
-          <Tag size={13} className="text-gold shrink-0" />
-          <span>{item.interest}</span>
-        </div>
-      )}
-      {item.source && (
-        <div className="flex items-center gap-1.5">
-          <Sparkles size={13} className="text-gold shrink-0" />
-          <span className="capitalize">{item.source}</span>
-        </div>
-      )}
-      {item.createdAt && (
-        <div className="flex items-center gap-1.5">
-          <Calendar size={13} className="text-gold shrink-0" />
-          <FormattedDate iso={item.createdAt} />
-        </div>
-      )}
-    </div>
-    {item.message && (
-      <div className="mt-3 rounded-xl bg-ivory p-3">
-        <div className="flex items-start gap-1.5">
-          <MessageSquare size={13} className="text-gold shrink-0 mt-0.5" />
-          <p className="text-sm text-ink/80 leading-relaxed">{item.message}</p>
-        </div>
-      </div>
-    )}
-  </div>
-);
-
-// ─── Project Details Report Row ──────────────────────────────────────────────
-const ProjectDetailsReportRow = ({ item, index }) => (
-  <div className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/20 text-xs font-bold text-gold">
-          #{index + 1}
-        </span>
-        <div>
-          <p className="font-bold text-ink">{item.name}</p>
-          <p className="text-xs text-ink/60">{item.email}</p>
-        </div>
-      </div>
-      <StatusBadge status={item.status} />
-    </div>
-    <div className="grid gap-2 sm:grid-cols-2 text-sm text-ink/70">
-      {item.phone && (
-        <div className="flex items-center gap-1.5">
-          <Phone size={13} className="text-gold shrink-0" />
-          <span>{item.phone}</span>
-        </div>
-      )}
-      {item.createdAt && (
-        <div className="flex items-center gap-1.5">
-          <Calendar size={13} className="text-gold shrink-0" />
-          <FormattedDate iso={item.createdAt} />
-        </div>
-      )}
-    </div>
-    {item.message && (
-      <div className="mt-3 rounded-xl bg-ivory p-3">
-        <div className="flex items-start gap-1.5">
-          <MessageSquare size={13} className="text-gold shrink-0 mt-0.5" />
-          <p className="text-sm text-ink/80 leading-relaxed">{item.message}</p>
-        </div>
-      </div>
-    )}
-  </div>
-);
-
-// ─── Report Section ──────────────────────────────────────────────────────────
-const ReportSection = ({ activeModule, reportData, reportLoading, reportError }) => {
-  const isQuote = activeModule === "quote-report";
-  const items = reportData[activeModule] || [];
-
-  return (
-    <div className="px-4 py-5 sm:px-7">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink/10 bg-white px-4 py-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Reports</p>
-          <h2 className="text-2xl font-bold text-ink">{cardTitles[activeModule]}</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-xl border border-ink/20 px-4 py-2 text-sm font-semibold text-ink/80">
-            {isQuote ? <ClipboardList size={16} /> : <FileText size={16} />}
-            Total: {items.length}
-          </span>
-        </div>
-      </header>
-
-      {/* Summary cards */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-ink/10 bg-white p-4 text-center">
-          <p className="text-3xl font-extrabold text-ink">{items.length}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-ink/60">Total Submissions</p>
-        </div>
-        {/* <div className="rounded-2xl border border-ink/10 bg-white p-4 text-center">
-          <p className="text-3xl font-extrabold text-blue-600">{items.filter((i) => i.status === "new" || !i.status).length}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-ink/60">New</p>
-        </div>
-        <div className="rounded-2xl border border-ink/10 bg-white p-4 text-center">
-          <p className="text-3xl font-extrabold text-green-600">{items.filter((i) => i.status === "closed").length}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-ink/60">Closed</p>
-        </div> */}
-      </div>
-
-      {reportLoading && (
-        <p className="py-10 text-center text-sm text-ink/60">Loading submissions…</p>
-      )}
-      {reportError && (
-        <p className="py-10 text-center text-sm text-red-600">{reportError}</p>
-      )}
-
-      {!reportLoading && !reportError && (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {items.length === 0 ? (
-            <p className="text-sm text-ink/60 col-span-full text-center py-10">No submissions yet.</p>
-          ) : (
-            items.map((item, i) =>
-              isQuote ? (
-                <QuoteReportRow key={item._id} item={item} index={i} />
-              ) : (
-                <ProjectDetailsReportRow key={item._id} item={item} index={i} />
-              )
-            )
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 const AdminPannel = () => {
-  const [activeModule, setActiveModule] = useState("products");
+  const navigate = useNavigate();
+  const [activeModule, setActiveModule] = useState("dashboard");
+  const [activeSidebarKey, setActiveSidebarKey] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const activeAction = useMemo(() => {
+    if (activeSidebarKey.endsWith("-manage")) return "manage";
+    if (activeSidebarKey.endsWith("-add")) return "add";
+    return activeSidebarKey === "dashboard" ? "dashboard" : "default";
+  }, [activeSidebarKey]);
+  const activeSidebarLabel = useMemo(() => {
+    if (activeSidebarKey === "dashboard") return "Dashboard";
+    const found = sidebarSections.flatMap((section) => section.items).find((item) => item.key === activeSidebarKey);
+    return found?.label || cardTitles[activeModule] || "";
+  }, [activeSidebarKey, activeModule]);
+  const [expandedSections, setExpandedSections] = useState(() =>
+    sidebarSections.reduce((acc, section) => {
+      if (section.title) acc[section.title] = false;
+      return acc;
+    }, {})
+  );
   const [forms, setForms] = useState(initialForms);
   const [lists, setLists] = useState({
-    products: [],
+    products: getImmediateProducts("all"),
+    productsCount: getImmediateProducts("all").length,
     testimonials: [],
-    projects: [],
+    testimonialsCount: 0,
+    gallery: [],
+    galleryCount: 0,
     team: [],
+    contacts: [],
+    contactsCount: 0,
+    quotes: [],
+    quotesCount: 0,
+    settings: {},
   });
-  const [projectFilter, setProjectFilter] = useState("all");
-  const [reportData, setReportData] = useState({
-    "quote-report": [],
-    "project-details-reports": [],
-  });
-  const [reportLoading, setReportLoading] = useState(false);
-  const [reportError, setReportError] = useState("");
-
   const [editingId, setEditingId] = useState(null);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [imageFileName, setImageFileName] = useState("");
+  const imageInputRef = useRef(null);
+  const successTimeoutRef = useRef(null);
 
-  const isReportModule = activeModule === "quote-report" || activeModule === "project-details-reports";
-  const form = forms[activeModule] || {};
+  const hasImageField = useMemo(() => ["products", "testimonials", "gallery", "team"].includes(activeModule), [activeModule]);
+  const isEnquiryModule = useMemo(() => ["contact-enquiries", "quote-enquiries"].includes(activeModule), [activeModule]);
+  const isDashboard = activeModule === "dashboard";
+  const isManageView = activeAction === "manage" && !editingId;
 
-  const hasImageField = useMemo(() => {
-    return ["products", "testimonials", "projects", "team"].includes(activeModule);
-  }, [activeModule]);
+  const loadDashboardSummary = async () => {
+    try {
+      const response = await adminApi.getDashboardSummary();
+      const summary = response.data;
 
-  // ─── Load content data ─────────────────────────────────────────────────────
+      if (summary?.success) {
+        setLists((current) => ({
+          ...current,
+          productsCount: summary.stats.totalProducts,
+          galleryCount: summary.stats.totalGallery,
+          testimonialsCount: summary.stats.totalTestimonials,
+          contactsCount: summary.stats.totalContacts,
+          quotesCount: summary.stats.totalQuotes,
+          contacts: summary.latestSubmissions.contacts || current.contacts,
+          quotes: summary.latestSubmissions.quotes || current.quotes,
+        }));
+      }
+    } catch {
+      setError("Unable to load dashboard summary.");
+    }
+  };
+
   const loadAllData = async () => {
     try {
-      const [productsResponse, testimonialsResponse, projectsResponse, teamResponse] = await Promise.all([
-        productApi.getProducts(),
+      const productRequest = productApi.getProducts({ limit: 25, page: 1 });
+      const otherRequests = Promise.all([
         testimonialApi.getTestimonials(),
-        sectionItemApi.getItems("projects"),
-        sectionItemApi.getItems("team"),
+        sectionItemApi.getItems("projects", { limit: 9, page: 1 }),
+        sectionItemApi.getItems("team", { limit: 6, page: 1 }),
+        contactApi.getContacts(),
+        leadApi.getLeads(),
+        settingsApi.getSettings(),
       ]);
 
-      setLists({
-        products: productsResponse.data || [],
-        testimonials: testimonialsResponse.data || [],
-        projects: projectsResponse.data || [],
-        team: teamResponse.data || [],
-      });
+      const productResponse = await productRequest;
+      setLists((current) => ({
+        ...current,
+        products: productResponse.data || [],
+        productsCount: Number(productResponse.headers["x-total-count"] || (productResponse.data?.length || 0)),
+      }));
+      saveCachedProducts("all", productResponse.data || []);
+
+      const [testimonialsRes, galleryRes, teamRes, contactsRes, quotesRes, settingsRes] = await otherRequests;
+      setLists((current) => ({
+        ...current,
+        testimonials: testimonialsRes.data || [],
+        testimonialsCount: testimonialsRes.data?.length || current.testimonialsCount,
+        gallery: galleryRes.data || [],
+        galleryCount: Number(galleryRes.headers["x-total-count"] || (galleryRes.data?.length || 0)),
+        team: teamRes.data || [],
+        contacts: contactsRes.data || [],
+        contactsCount: contactsRes.data?.length || current.contactsCount,
+        quotes: quotesRes.data || [],
+        quotesCount: quotesRes.data?.length || current.quotesCount,
+      }));
+
+      if (settingsRes.data) {
+        setForms((current) => ({
+          ...current,
+          settings: { ...current.settings, ...settingsRes.data },
+        }));
+      }
     } catch {
       setError("Unable to load data. Please check the backend.");
     }
   };
 
-  // ─── Load report data ──────────────────────────────────────────────────────
-  const loadReportData = async (moduleKey) => {
-    setReportLoading(true);
-    setReportError("");
-    try {
-      if (moduleKey === "quote-report") {
-        const res = await leadApi.getLeads();
-        setReportData((prev) => ({ ...prev, "quote-report": res.data || [] }));
-      } else if (moduleKey === "project-details-reports") {
-        const res = await contactApi.getContacts();
-        setReportData((prev) => ({ ...prev, "project-details-reports": res.data || [] }));
-      }
-    } catch {
-      setReportError("Unable to load report. Please check the backend.");
-    } finally {
-      setReportLoading(false);
-    }
-  };
-
   useEffect(() => {
+    loadDashboardSummary();
     loadAllData();
   }, []);
 
-  // Reload report whenever user switches to a report tab
   useEffect(() => {
-    if (isReportModule) {
-      loadReportData(activeModule);
-    }
-  }, [activeModule]);
+    if (status !== "success") return;
 
-  const resetActiveForm = () => {
-    setForms((current) => ({
-      ...current,
-      [activeModule]: initialForms[activeModule],
-    }));
+    successTimeoutRef.current = window.setTimeout(() => {
+      setStatus("idle");
+      successTimeoutRef.current = null;
+    }, 2500);
+
+    return () => {
+      if (successTimeoutRef.current) {
+        window.clearTimeout(successTimeoutRef.current);
+        successTimeoutRef.current = null;
+      }
+    };
+  }, [status]);
+
+  const resetForm = () => {
+    setForms((current) => ({ ...current, [activeModule]: initialForms[activeModule] }));
     setEditingId(null);
     setImageFileName("");
+    setError("");
+    setStatus("idle");
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  const handleModuleChange = (key, module = key) => {
+    setActiveSidebarKey(key);
+    setActiveModule(module);
+    setEditingId(null);
+    setError("");
+    setStatus("idle");
+    setImageFileName("");
+    setIsSidebarOpen(false);
+
+    if (module === "dashboard") {
+      setExpandedSections((current) =>
+        Object.keys(current).reduce((acc, sectionTitle) => {
+          acc[sectionTitle] = false;
+          return acc;
+        }, {})
+      );
+    }
+  };
+
+  const toggleSection = (title) => {
+    setExpandedSections((current) => {
+      const isOpen = current[title];
+      const next = Object.keys(current).reduce((acc, sectionTitle) => {
+        acc[sectionTitle] = false;
+        return acc;
+      }, {});
+      next[title] = !isOpen;
+      return next;
+    });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAdminAuthenticated");
+    navigate("/admin-login");
   };
 
   const handleChange = (event) => {
@@ -356,22 +387,108 @@ const AdminPannel = () => {
     reader.readAsDataURL(file);
   };
 
+  const syncProductCatalogCache = (nextProducts) => {
+    const list = Array.isArray(nextProducts) ? nextProducts : [];
+    saveCachedProducts("all", list);
+    categories.forEach((category) => {
+      saveCachedProducts(category.value, list.filter((product) => product.category === category.value));
+    });
+  };
+
+  const upsertProductLocally = (product, mode = "create") => {
+    if (!product) return;
+
+    setLists((current) => {
+      const currentProducts = Array.isArray(current.products) ? current.products : [];
+      const canSyncCache = current.productsCount > 0 && currentProducts.length >= current.productsCount;
+      const nextProducts =
+        mode === "delete"
+          ? currentProducts.filter((item) => item._id !== product._id)
+          : mode === "update"
+          ? currentProducts.some((item) => item._id === product._id)
+            ? currentProducts.map((item) => (item._id === product._id ? product : item))
+            : [product, ...currentProducts]
+          : [product, ...currentProducts.filter((item) => item._id !== product._id)];
+
+      if (canSyncCache) {
+        syncProductCatalogCache(nextProducts);
+      }
+
+      return {
+        ...current,
+        products: nextProducts,
+        productsCount: current.productsCount ? Math.max(nextProducts.length, current.productsCount) : nextProducts.length,
+      };
+    });
+  };
+
+  const removeProductLocally = (productId) => {
+    if (!productId) return;
+
+    setLists((current) => {
+      const currentProducts = Array.isArray(current.products) ? current.products : [];
+      const canSyncCache = current.productsCount > 0 && currentProducts.length >= current.productsCount;
+      const nextProducts = currentProducts.filter((item) => item._id !== productId);
+
+      if (canSyncCache) {
+        syncProductCatalogCache(nextProducts);
+      }
+
+      return {
+        ...current,
+        products: nextProducts,
+        productsCount: current.productsCount ? Math.max(nextProducts.length, current.productsCount - 1) : nextProducts.length,
+      };
+    });
+  };
+
+  const replaceProductLocally = (tempId, product) => {
+    if (!tempId || !product) return;
+
+    setLists((current) => {
+      const currentProducts = Array.isArray(current.products) ? current.products : [];
+      const nextProducts = currentProducts.map((item) => (item._id === tempId ? product : item));
+      const canSyncCache = current.productsCount > 0 && currentProducts.length >= current.productsCount;
+
+      if (canSyncCache) {
+        syncProductCatalogCache(nextProducts);
+      }
+
+      return {
+        ...current,
+        products: nextProducts,
+      };
+    });
+  };
+
   const runCreate = async (moduleKey, payload) => {
     if (moduleKey === "products") return productApi.createProduct(payload);
     if (moduleKey === "testimonials") return testimonialApi.createTestimonial(payload);
-    return sectionItemApi.createItem(payload);
+    if (moduleKey === "gallery" || moduleKey === "team") return sectionItemApi.createItem(payload);
+    return null;
   };
 
   const runUpdate = async (moduleKey, id, payload) => {
     if (moduleKey === "products") return productApi.updateProduct(id, payload);
     if (moduleKey === "testimonials") return testimonialApi.updateTestimonial(id, payload);
-    return sectionItemApi.updateItem(id, payload);
+    if (moduleKey === "gallery" || moduleKey === "team") return sectionItemApi.updateItem(id, payload);
+    // if (moduleKey === "settings") return settingsApi.updateSettings(payload);
+    return null;
   };
 
   const runDelete = async (moduleKey, id) => {
     if (moduleKey === "products") return productApi.deleteProduct(id);
     if (moduleKey === "testimonials") return testimonialApi.deleteTestimonial(id);
-    return sectionItemApi.deleteItem(id);
+    if (moduleKey === "gallery" || moduleKey === "team") return sectionItemApi.deleteItem(id);
+    if (moduleKey === "contact-enquiries") return contactApi.deleteContact(id);
+    if (moduleKey === "quote-enquiries") return leadApi.deleteLead(id);
+    return null;
+  };
+
+  const runStatusUpdate = async (moduleKey, id, payload) => {
+    if (moduleKey === "contact-enquiries") return contactApi.updateContact(id, payload);
+    if (moduleKey === "quote-enquiries") return leadApi.updateLead(id, payload);
+    return null;
   };
 
   const handleSubmit = async (event) => {
@@ -379,24 +496,91 @@ const AdminPannel = () => {
     setStatus("loading");
     setError("");
 
+    let rollbackCreateTempId = null;
+    let rollbackPreviousProduct = null;
+
     try {
-      if (editingId) {
-        await runUpdate(activeModule, editingId, form);
-      } else {
-        await runCreate(activeModule, form);
+      const payload = { ...forms[activeModule] };
+      const isProductModule = activeModule === "products";
+      const productSnapshot = isProductModule
+        ? lists.products.find((item) => item._id === editingId) || null
+        : null;
+      const tempProductId = isProductModule && !editingId ? `temp-${Date.now()}` : null;
+
+      if (isProductModule && !editingId) {
+        const optimisticProduct = {
+          _id: tempProductId,
+          name: payload.name,
+          category: payload.category,
+          size: payload.size,
+          price: payload.price,
+          shortDescription: payload.shortDescription,
+          description: payload.description,
+          features: payload.features,
+          status: payload.status,
+          image: payload.image,
+          slug: payload.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-"),
+          createdAt: new Date().toISOString(),
+        };
+        upsertProductLocally(optimisticProduct, "create");
+        rollbackCreateTempId = tempProductId;
+        setActiveSidebarKey("products-manage");
       }
-      resetActiveForm();
-      setStatus("success");
+
+      if (isProductModule && editingId) {
+        const optimisticProduct = {
+          ...(productSnapshot || {}),
+          ...payload,
+          _id: editingId,
+          slug: payload.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-"),
+        };
+        upsertProductLocally(optimisticProduct, "update");
+        rollbackPreviousProduct = productSnapshot;
+      }
+
+      let savedItem = null;
+      if (activeModule === "settings") {
+        await runUpdate(activeModule, null, payload);
+      } else if (editingId) {
+        const response = await runUpdate(activeModule, editingId, payload);
+        savedItem = response?.data || null;
+      } else {
+        const response = await runCreate(activeModule, payload);
+        savedItem = response?.data || null;
+      }
+
+      if (isProductModule && savedItem) {
+        if (editingId) {
+          replaceProductLocally(editingId, savedItem);
+        } else if (rollbackCreateTempId) {
+          replaceProductLocally(rollbackCreateTempId, savedItem);
+        }
+      }
+
+      await loadDashboardSummary();
       await loadAllData();
+      resetForm();
+      setStatus("success");
     } catch (apiError) {
+      if (activeModule === "products") {
+        if (rollbackCreateTempId) {
+          removeProductLocally(rollbackCreateTempId);
+        }
+        if (rollbackPreviousProduct) {
+          upsertProductLocally(rollbackPreviousProduct, "update");
+        }
+      }
       setStatus("error");
       setError(apiError.response?.data?.message || "Unable to save the item.");
     }
   };
 
-  const handleEdit = (item) => {
-    const next = { ...initialForms[activeModule], ...item };
-    setForms((current) => ({ ...current, [activeModule]: next }));
+  const prepareFormForEdit = (item) => {
+    const nextForm = { ...initialForms[activeModule], ...item };
+    if (activeModule === "products") {
+      nextForm.features = Array.isArray(item.features) ? item.features.join("\n") : item.features || "";
+    }
+    setForms((current) => ({ ...current, [activeModule]: nextForm }));
     setEditingId(item._id);
     setStatus("idle");
     setError("");
@@ -405,18 +589,39 @@ const AdminPannel = () => {
   };
 
   const handleDelete = async (id) => {
+    const deletedProduct = activeModule === "products" ? lists.products.find((item) => item._id === id) || null : null;
+
     try {
       setStatus("loading");
       setError("");
-      await runDelete(activeModule, id);
-      if (editingId === id) {
-        resetActiveForm();
+      if (activeModule === "products") {
+        removeProductLocally(id);
       }
-      setStatus("success");
+      await runDelete(activeModule, id);
+      if (editingId === id) resetForm();
+      await loadDashboardSummary();
       await loadAllData();
+      setStatus("success");
     } catch (apiError) {
+      if (activeModule === "products" && deletedProduct) {
+        upsertProductLocally(deletedProduct, "create");
+      }
       setStatus("error");
       setError(apiError.response?.data?.message || "Unable to delete the item.");
+    }
+  };
+
+  const handleEnquiryStatus = async (id, nextStatus) => {
+    try {
+      setStatus("loading");
+      setError("");
+      await runStatusUpdate(activeModule, id, { status: nextStatus });
+      await loadDashboardSummary();
+      await loadAllData();
+      setStatus("success");
+    } catch (apiError) {
+      setStatus("error");
+      setError(apiError.response?.data?.message || "Unable to update status.");
     }
   };
 
@@ -424,11 +629,42 @@ const AdminPannel = () => {
     if (activeModule === "products") {
       return (
         <>
-          <label className="text-sm font-semibold text-ink">Name<input name="name" value={form.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          <label className="text-sm font-semibold text-ink">Size<input name="size" value={form.size} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          <label className="text-sm font-semibold text-ink">Price<input name="price" value={form.price} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          <label className="text-sm font-semibold text-ink sm:col-span-2">Description<textarea name="description" value={form.description} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" rows={4} required /></label>
-          {/* <label className="text-sm font-semibold text-ink sm:col-span-2">Image URL<input name="image" value={form.image} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label> */}
+          <label className="text-sm font-semibold text-ink">
+            Name
+            <input name="name" value={forms.products.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Category
+            <select name="category" value={forms.products.category} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" >
+              {categories.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Size
+            <input name="size" value={forms.products.size} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Price
+            <input name="price" value={forms.products.price} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+          </label>
+          {/* <label className="text-sm font-semibold text-ink sm:col-span-2">
+            Short Description
+            <textarea name="shortDescription" value={forms.products.shortDescription} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" rows={3} />
+          </label> */}
+          <label className="text-sm font-semibold text-ink sm:col-span-2">
+            Description
+            <textarea name="description" value={forms.products.description} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" rows={4}  />
+          </label>
+          
+          <label className="text-sm font-semibold text-ink">
+            Status
+            <select name="status" value={forms.products.status} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
         </>
       );
     }
@@ -436,36 +672,46 @@ const AdminPannel = () => {
     if (activeModule === "testimonials") {
       return (
         <>
-          <label className="text-sm font-semibold text-ink">Name<input name="name" value={form.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          <label className="text-sm font-semibold text-ink">Role<input name="role" value={form.role} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          <label className="text-sm font-semibold text-ink">Location<input name="location" value={form.location} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          <label className="text-sm font-semibold text-ink">Rating (1-5)<input type="number" min="1" max="5" step="0.1" name="rating" value={form.rating} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" /></label>
-          <label className="text-sm font-semibold text-ink sm:col-span-2">Review<textarea name="review" value={form.review} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" rows={4} required /></label>
-          {/* <label className="text-sm font-semibold text-ink sm:col-span-2">Image URL<input name="image" value={form.image} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label> */}
+          <label className="text-sm font-semibold text-ink">
+            Name
+            <input name="name" value={forms.testimonials.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Location
+            <input name="location" value={forms.testimonials.location} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"  />
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Rating
+            <input type="number" min="1" max="5" name="rating" value={forms.testimonials.rating} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" />
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Status
+            <select name="status" value={forms.testimonials.status} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+          <label className="text-sm font-semibold text-ink sm:col-span-2">
+            Review
+            <textarea name="review" value={forms.testimonials.review} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" rows={4} required />
+          </label>
         </>
       );
     }
 
-    if (activeModule === "projects") {
+    if (activeModule === "gallery") {
       return (
         <>
-          <label className="text-sm font-semibold text-ink">Title<input name="title" value={form.title} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
+          <label className="text-sm font-semibold text-ink">
+            Title
+            <input name="title" value={forms.gallery.title} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required />
+          </label>
           <label className="text-sm font-semibold text-ink">
             Category
-            <select
-              name="category"
-              value={form.category || ""}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
-              required
-            >
-              <option value="" disabled>Select Category</option>
-              <option value="all">ALL</option>
-              <option value="modern">MODERN</option>
-              <option value="classic">CLASSIC</option>
-              <option value="spa">SPA</option>
-              {/* <option value="sauna">SAUNA</option>
-              <option value="steam">STEAM</option> */}
+            <select name="category" value={forms.gallery.category} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required>
+              {categories.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
           </label>
         </>
@@ -475,12 +721,136 @@ const AdminPannel = () => {
     if (activeModule === "team") {
       return (
         <>
-          <label className="text-sm font-semibold text-ink">Name<input name="name" value={form.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          <label className="text-sm font-semibold text-ink">Role<input name="role" value={form.role} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label>
-          {/* <label className="text-sm font-semibold text-ink sm:col-span-2">Image URL<input name="image" value={form.image} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required /></label> */}
+          <label className="text-sm font-semibold text-ink">
+            Name
+            <input name="name" value={forms.team.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required />
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Role
+            <input name="role" value={forms.team.role} onChange={handleChange} className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink" required />
+          </label>
         </>
       );
     }
+
+    // if (activeModule === "settings") {
+    //   return (
+    //     <>
+    //       <div className="sm:col-span-2">
+    //         <h3 className="text-lg font-semibold text-ink">Company Details</h3>
+    //         <p className="mt-1 text-sm text-ink/70">Update the brand identity and core contact information used across the website.</p>
+    //       </div>
+
+    //       <label className="text-sm font-semibold text-ink">
+    //         Official Company Name
+    //         <input
+    //           type="text"
+    //           name="companyName"
+    //           value={forms.settings.companyName}
+    //           onChange={handleChange}
+    //           placeholder="Imperial Bath Solutions"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //       <label className="text-sm font-semibold text-ink">
+    //         Registered Address
+    //         <input
+    //           type="text"
+    //           name="address"
+    //           value={forms.settings.address}
+    //           onChange={handleChange}
+    //           placeholder="123 Luxury Avenue, Bath City, UK"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //       <label className="text-sm font-semibold text-ink">
+    //         Corporate Email
+    //         <input
+    //           type="email"
+    //           name="email"
+    //           value={forms.settings.email}
+    //           onChange={handleChange}
+    //           placeholder="contact@imperialbath.com"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //       <label className="text-sm font-semibold text-ink">
+    //         Office Phone Number
+    //         <input
+    //           type="tel"
+    //           name="phone"
+    //           value={forms.settings.phone}
+    //           onChange={handleChange}
+    //           placeholder="+44 1234 567890"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //       <div className="sm:col-span-2">
+    //         <h3 className="text-lg font-semibold text-ink">Contact & Messaging</h3>
+    //         <p className="mt-1 text-sm text-ink/70">Provide the WhatsApp channel used for customer enquiries and instant support.</p>
+    //       </div>
+    //       <label className="text-sm font-semibold text-ink sm:col-span-2">
+    //         WhatsApp Contact Number
+    //         <input
+    //           type="tel"
+    //           name="whatsappNumber"
+    //           value={forms.settings.whatsappNumber}
+    //           onChange={handleChange}
+    //           placeholder="+44 7700 900123"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //       <div className="sm:col-span-2">
+    //         <h3 className="text-lg font-semibold text-ink">Social Media Links</h3>
+    //         <p className="mt-1 text-sm text-ink/70">Add polished social profile links that appear in the website footer and contact pages.</p>
+    //       </div>
+    //       <label className="text-sm font-semibold text-ink">
+    //         Instagram Profile URL
+    //         <input
+    //           type="url"
+    //           name="instagram"
+    //           value={forms.settings.instagram}
+    //           onChange={handleChange}
+    //           placeholder="https://www.instagram.com/imperialbath"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //       <label className="text-sm font-semibold text-ink">
+    //         Facebook Page URL
+    //         <input
+    //           type="url"
+    //           name="facebook"
+    //           value={forms.settings.facebook}
+    //           onChange={handleChange}
+    //           placeholder="https://www.facebook.com/imperialbath"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //       <label className="text-sm font-semibold text-ink sm:col-span-2">
+    //         Footer Disclaimer / Tagline
+    //         <textarea
+    //           name="footerText"
+    //           value={forms.settings.footerText}
+    //           onChange={handleChange}
+    //           placeholder="Delivering premium bathroom solutions with unmatched craftsmanship and service."
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //           rows={3}
+    //         />
+    //       </label>
+    //       <label className="text-sm font-semibold text-ink sm:col-span-2">
+    //         Brand Logo URL
+    //         <input
+    //           type="url"
+    //           name="logo"
+    //           value={forms.settings.logo}
+    //           onChange={handleChange}
+    //           placeholder="https://example.com/logo.svg"
+    //           className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+    //         />
+    //       </label>
+    //     </>
+    //   );
+    // }
 
     return null;
   };
@@ -490,9 +860,54 @@ const AdminPannel = () => {
       return <ProductCard product={item} />;
     }
 
+    if (activeModule === "contact-enquiries" || activeModule === "quote-enquiries") {
+      return (
+        <div className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h4 className="text-lg font-bold text-ink">{item.name}</h4>
+              <p className="mt-1 text-sm text-ink/70">{item.email}</p>
+            </div>
+            <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${item.status === "contacted" ? "bg-amber-100 text-amber-700" : item.status === "closed" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
+              {item.status || "new"}
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 text-sm text-ink/70">
+            {item.phone && (
+              <div className="flex items-center gap-2">
+                <Phone size={14} className="text-gold" />
+                <span>{item.phone}</span>
+              </div>
+            )}
+            {item.interest && (
+              <div className="flex items-center gap-2">
+                <Tag size={14} className="text-gold" />
+                <span>{item.interest}</span>
+              </div>
+            )}
+            {item.source && (
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-gold" />
+                <span>{item.source}</span>
+              </div>
+            )}
+            {item.createdAt && (
+              <div className="flex items-center gap-2">
+                <Calendar size={14} className="text-gold" />
+                <FormattedDate iso={item.createdAt} />
+              </div>
+            )}
+          </div>
+          {item.message && (
+            <div className="mt-4 rounded-2xl bg-ivory p-4 text-sm text-ink/80">{item.message}</div>
+          )}
+        </div>
+      );
+    }
+
     return (
-      <div className="rounded-xl border border-ink/10 bg-ivory p-4">
-        {item.image && <img src={item.image} alt={item.title || item.name} className="mb-3 h-40 w-full rounded-lg object-cover" />}
+      <div className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm">
+        {item.image && <img src={item.image} alt={item.title || item.name} className="mb-4 h-40 w-full rounded-2xl object-cover" />}
         {item.title && <h4 className="text-lg font-bold text-ink">{item.title}</h4>}
         {item.name && <h4 className="text-lg font-bold text-ink">{item.name}</h4>}
         {item.role && <p className="text-sm font-semibold text-gold">{item.role}</p>}
@@ -500,9 +915,305 @@ const AdminPannel = () => {
         {item.category && <p className="text-sm text-ink/70">Category: {item.category}</p>}
         {item.size && <p className="text-sm text-ink/70">Size: {item.size}</p>}
         {item.price && <p className="text-sm text-ink/70">Price: {item.price}</p>}
-        {item.text && <p className="mt-2 text-sm text-ink/70">{item.text}</p>}
+        {/* {item.shortDescription && <p className="mt-2 text-sm text-ink/70">{item.shortDescription}</p>} */}
         {item.description && <p className="mt-2 text-sm text-ink/70">{item.description}</p>}
         {item.review && <p className="mt-2 text-sm text-ink/70">{item.review}</p>}
+      </div>
+    );
+  };
+
+  const renderEnquiryList = () => {
+    const items = activeModule === "contact-enquiries" ? lists.contacts : lists.quotes;
+
+    return (
+      <div className="grid gap-4">
+        {items.length === 0 ? (
+          <div className="rounded-2xl border border-ink/10 bg-white p-6 text-center text-sm text-ink/60">No enquiries yet.</div>
+        ) : (
+          items.map((item) => (
+            <div key={item._id} className="rounded-2xl border border-ink/10 bg-white p-5 shadow-sm">
+              {renderListCard(item)}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button type="button" onClick={() => handleEnquiryStatus(item._id, "contacted")} className="rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-ink transition hover:bg-gold/90">
+                  Mark Contacted
+                </button>
+                <button type="button" onClick={() => handleDelete(item._id)} className="rounded-xl border border-red-600 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  };
+
+  const renderManageListPanel = () => {
+    const items = lists[activeModule] || [];
+
+    return (
+      <div>
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-ink/10 bg-white px-6 py-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Manage</p>
+            <h2 className="mt-2 text-2xl font-bold text-ink">{activeSidebarLabel}</h2>
+          </div>
+          <div className="rounded-3xl bg-ivory px-4 py-3 text-sm text-ink/70">Total: {items.length}</div>
+        </header>
+
+        <div className="rounded-3xl border border-ink/10 bg-white p-6">
+          {items.length === 0 ? (
+            <p className="text-sm text-ink/60">No items yet.</p>
+          ) : activeModule === "products" ? (
+            <div className="space-y-4">
+              {items.map((product) => (
+                <div key={product._id} className="rounded-3xl border border-ink/10 bg-ivory p-4 shadow-sm">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h4 className="text-lg font-bold text-ink">{product.name}</h4>
+                        {product.category && <span className="rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold uppercase text-gold">{product.category}</span>}
+                      </div>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                        <p className="text-sm text-ink/70">Size: {product.size || "—"}</p>
+                        <p className="text-sm text-ink/70">Price: {product.price || "—"}</p>
+                        <p className="text-sm text-ink/70">Status: {product.status || "—"}</p>
+                      </div>
+                      {product.shortDescription && <p className="mt-3 text-sm text-ink/80">{product.shortDescription}</p>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-4 sm:pt-0 sm:shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => prepareFormForEdit(product)}
+                        className="rounded-lg border border-ink/25 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-white"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(product._id)}
+                        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {items.map((item) => (
+                <div key={item._id} className="rounded-2xl border border-ink/10 bg-ivory p-4">
+                  {renderListCard(item)}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => prepareFormForEdit(item)}
+                      className="rounded-lg border border-ink/25 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-white"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(item._id)}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderSectionPreview = () => {
+    const sectionForm = forms[activeModule];
+
+    if (activeModule === "products") {
+      const hasPreview = Boolean(sectionForm.name || sectionForm.category || sectionForm.price || sectionForm.size || sectionForm.shortDescription || sectionForm.image);
+
+      if (!hasPreview) {
+        return <p className="text-sm text-ink/60">Complete product fields to see a preview.</p>;
+      }
+
+      return (
+        <div className="rounded-3xl border border-ink/10 bg-ivory p-4 shadow-sm">
+          <div className="grid gap-4">
+            {sectionForm.image && (
+              <img src={sectionForm.image} alt={sectionForm.name || "Product preview"} className="h-40 w-full rounded-2xl object-cover" />
+            )}
+            <div>
+              <h4 className="text-lg font-bold text-ink">{sectionForm.name || "Untitled Product"}</h4>
+              {sectionForm.category && <p className="mt-1 text-sm text-ink/70">Category: {sectionForm.category}</p>}
+              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                <p className="text-sm text-ink/70">Size: {sectionForm.size || "—"}</p>
+                <p className="text-sm text-ink/70">Price: {sectionForm.price || "—"}</p>
+                <p className="text-sm text-ink/70">Status: {sectionForm.status || "—"}</p>
+              </div>
+              {sectionForm.shortDescription && <p className="mt-3 text-sm text-ink/80">{sectionForm.shortDescription}</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeModule === "testimonials") {
+      const hasPreview = Boolean(sectionForm.name || sectionForm.location || sectionForm.review || sectionForm.image);
+
+      if (!hasPreview) {
+        return <p className="text-sm text-ink/60">Complete testimonial fields to see a preview.</p>;
+      }
+
+      return (
+        <div className="rounded-3xl border border-ink/10 bg-ivory p-4 shadow-sm">
+          <div className="grid gap-4">
+            {sectionForm.image && (
+              <img src={sectionForm.image} alt={sectionForm.name || "Testimonial preview"} className="h-40 w-full rounded-2xl object-cover" />
+            )}
+            <div>
+              <h4 className="text-lg font-bold text-ink">{sectionForm.name || "Unnamed Reviewer"}</h4>
+              {sectionForm.location && <p className="text-sm text-ink/70">{sectionForm.location}</p>}
+              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                <p className="text-sm text-ink/70">Rating: {sectionForm.rating || "—"}</p>
+                <p className="text-sm text-ink/70">Status: {sectionForm.status || "—"}</p>
+                <span className="text-sm text-ink/70">&nbsp;</span>
+              </div>
+              {sectionForm.review && <p className="mt-3 text-sm text-ink/80">{sectionForm.review}</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeModule === "gallery") {
+      const hasPreview = Boolean(sectionForm.title || sectionForm.category || sectionForm.image);
+      const categoryLabel = categories.find((option) => option.value === sectionForm.category)?.label || sectionForm.category;
+
+      if (!hasPreview) {
+        return <p className="text-sm text-ink/60">Complete gallery fields to see a preview.</p>;
+      }
+
+      return (
+        <div className="rounded-3xl border border-ink/10 bg-ivory p-4 shadow-sm">
+          <div className="grid gap-4">
+            {sectionForm.image && (
+              <img src={sectionForm.image} alt={sectionForm.title || "Gallery preview"} className="h-40 w-full rounded-2xl object-cover" />
+            )}
+            <div>
+              <h4 className="text-lg font-bold text-ink">{sectionForm.title || "Untitled Gallery Item"}</h4>
+              {categoryLabel && <p className="mt-1 text-sm text-ink/70">Category: {categoryLabel}</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeModule === "team") {
+      const hasPreview = Boolean(sectionForm.name || sectionForm.role || sectionForm.image);
+
+      if (!hasPreview) {
+        return <p className="text-sm text-ink/60">Complete team member fields to see a preview.</p>;
+      }
+
+      return (
+        <div className="rounded-3xl border border-ink/10 bg-ivory p-4 shadow-sm">
+          <div className="grid gap-4">
+            {sectionForm.image && (
+              <img src={sectionForm.image} alt={sectionForm.name || "Team preview"} className="h-40 w-full rounded-2xl object-cover" />
+            )}
+            <div>
+              <h4 className="text-lg font-bold text-ink">{sectionForm.name || "Unnamed Team Member"}</h4>
+              {sectionForm.role && <p className="mt-1 text-sm text-ink/70">{sectionForm.role}</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return <p className="text-sm text-ink/60">Select a section to see a preview.</p>;
+  };
+
+  const renderDashboard = () => {
+    const summaryCards = [
+      { label: "Products", value: lists.productsCount || lists.products.length, icon: Layers },
+      { label: "Gallery", value: lists.galleryCount || lists.gallery.length, icon: ClipboardList },
+      { label: "Testimonials", value: lists.testimonialsCount || lists.testimonials.length, icon: Sparkles },
+      { label: "Contacts", value: lists.contactsCount || lists.contacts.length, icon: Mail },
+      { label: "Quotes", value: lists.quotesCount || lists.quotes.length, icon: FileText },
+    ];
+
+    return (
+      <div className="px-4 py-5 sm:px-7">
+        <header className="mb-6 rounded-3xl border border-ink/10 bg-white p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Overview</p>
+              <h1 className="mt-2 text-3xl font-bold text-ink">Admin Dashboard</h1>
+            </div>
+            <div className="rounded-3xl bg-ivory px-4 py-3 text-sm text-ink/70">{new Date().toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric" })}</div>
+          </div>
+        </header>
+
+        <div className="grid gap-4 xl:grid-cols-3">
+          {summaryCards.map((card) => (
+            <div key={card.label} className="rounded-3xl border border-ink/10 bg-white p-6">
+              <div className="flex items-center gap-3">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gold/20 text-gold"><card.icon size={20} /></span>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-ink/40">{card.label}</p>
+                  <p className="mt-2 text-3xl font-bold text-ink">{card.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-4 xl:grid-cols-2">
+          <div className="rounded-3xl border border-ink/10 bg-white p-6">
+            <h2 className="text-xl font-bold text-ink">Latest Quote Requests</h2>
+            <p className="mt-2 text-sm text-ink/70">Recent customer requests from the website.</p>
+            <div className="mt-4 space-y-4">
+              {lists.quotes.slice(0, 3).map((item) => (
+                <div key={item._id} className="rounded-2xl border border-ink/10 bg-ivory p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-ink">{item.name}</p>
+                      <p className="text-sm text-ink/70">{item.email}</p>
+                    </div>
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${item.status === "contacted" ? "bg-amber-100 text-amber-700" : item.status === "closed" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>{item.status || "new"}</span>
+                  </div>
+                  {item.message && <p className="mt-3 text-sm text-ink/80">{item.message}</p>}
+                </div>
+              ))}
+              {!lists.quotes.length && <p className="text-sm text-ink/60">No quote requests yet.</p>}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-ink/10 bg-white p-6">
+            <h2 className="text-xl font-bold text-ink">Latest Contact Enquiries</h2>
+            <p className="mt-2 text-sm text-ink/70">Recent contact enquiries from the website.</p>
+            <div className="mt-4 space-y-4">
+              {lists.contacts.slice(0, 3).map((item) => (
+                <div key={item._id} className="rounded-2xl border border-ink/10 bg-ivory p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-ink">{item.name}</p>
+                      <p className="text-sm text-ink/70">{item.email}</p>
+                    </div>
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${item.status === "contacted" ? "bg-amber-100 text-amber-700" : item.status === "closed" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>{item.status || "new"}</span>
+                  </div>
+                  {item.message && <p className="mt-3 text-sm text-ink/80">{item.message}</p>}
+                </div>
+              ))}
+              {!lists.contacts.length && <p className="text-sm text-ink/60">No contact enquiries yet.</p>}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -510,199 +1221,262 @@ const AdminPannel = () => {
   return (
     <main className="min-h-screen bg-ivory">
       <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
-        {/* ── Sidebar ────────────────────────────────────────────────────── */}
-        <aside className="border-r border-ink/10 bg-white px-5 py-6">
+        {isSidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+            aria-label="Close sidebar"
+          />
+        )}
+        <aside className={`border-r border-ink/10 bg-white px-5 py-6 lg:static lg:z-auto ${isSidebarOpen ? "fixed inset-y-0 left-0 z-50 w-[280px] translate-x-0 shadow-2xl" : "fixed inset-y-0 left-0 z-50 -translate-x-full transition-transform duration-200 ease-in-out"} lg:translate-x-0 lg:w-[280px] lg:shadow-none`}>
           <div className="rounded-2xl border border-gold/25 bg-ivory p-4">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Imperial Admin</p>
-            <h1 className="mt-2 text-xl font-bold text-ink">Content Console</h1>
+            <h1 className="mt-2 text-xl font-bold text-ink">Control Panel</h1>
           </div>
+          <nav className="mt-6 space-y-4">
+            {sidebarSections.map((section) => {
+              const sectionOpen = section.title
+                ? expandedSections[section.title] || section.items.some((item) => item.key === activeSidebarKey)
+                : true;
+              const SectionIcon = section.items[0].icon;
 
-          <nav className="mt-6 grid gap-1">
-            {/* Content modules */}
-            <p className="mb-1 px-2 text-[10px] font-bold uppercase tracking-widest text-ink/40">Content</p>
-            {modules.filter((m) => m.type === "content").map((module) => (
+              return (
+                <div key={section.title || "dashboard-section"} className="rounded-3xl border border-ink/10 bg-ivory p-3">
+                  {section.title ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.title)}
+                      className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold text-ink/90 transition hover:bg-white"
+                    >
+                      <span className="flex items-center gap-3">
+                        <SectionIcon size={16} />
+                        {section.title}
+                      </span>
+                      <ChevronDown
+                        size={16}
+                        className={`${sectionOpen ? "rotate-180" : "rotate-0"} transition-transform duration-200`}
+                      />
+                    </button>
+                  ) : null}
+                  <div className={`${section.title ? "mt-2" : ""} space-y-1 ${section.title && !sectionOpen ? "hidden" : "block"}`}>
+                    {section.items.map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => handleModuleChange(item.key, item.module)}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition ${activeSidebarKey === item.key ? "bg-ink text-champagne" : "text-ink/80 hover:bg-white"}`}
+                      >
+                        <item.icon size={16} />
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="mt-4 rounded-3xl border border-rose-200 bg-rose-50 p-3">
               <button
-                key={module.key}
                 type="button"
-                onClick={() => {
-                  setActiveModule(module.key);
-                  setStatus("idle");
-                  setError("");
-                  setEditingId(null);
-                  setImageFileName("");
-                  setProjectFilter("all");
-                }}
-                className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition ${activeModule === module.key ? "bg-ink text-champagne" : "text-ink/80 hover:bg-ivory"}`}
+                onClick={handleLogout}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-600"
               >
-                <Layers size={16} /> {module.label}
+                Logout
               </button>
-            ))}
-
-            {/* Report modules */}
-            <p className="mb-1 mt-4 px-2 text-[10px] font-bold uppercase tracking-widest text-ink/40">Reports</p>
-            {modules.filter((m) => m.type === "report").map((module) => (
-              <button
-                key={module.key}
-                type="button"
-                onClick={() => {
-                  setActiveModule(module.key);
-                  setStatus("idle");
-                  setError("");
-                  setEditingId(null);
-                  setImageFileName("");
-                  setProjectFilter("all");
-                }}
-                className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition ${activeModule === module.key ? "bg-gold text-ink" : "text-ink/80 hover:bg-ivory"}`}
-              >
-                {module.key === "quote-report" ? <ClipboardList size={16} /> : <FileText size={16} />}
-                {module.label}
-              </button>
-            ))}
+            </div>
           </nav>
         </aside>
 
-        {/* ── Main content ────────────────────────────────────────────────── */}
-        {isReportModule ? (
-          <ReportSection
-            activeModule={activeModule}
-            reportData={reportData}
-            reportLoading={reportLoading}
-            reportError={reportError}
-          />
-        ) : (
-          <div className="px-4 py-5 sm:px-7">
-            <header className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink/10 bg-white px-4 py-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Console Operations</p>
-                <h2 className="text-2xl font-bold text-ink">Manage {cardTitles[activeModule]}</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <button type="button" className="inline-flex items-center gap-2 rounded-xl border border-ink/20 px-4 py-2 text-sm font-semibold text-ink/80">
-                  <Save size={16} /> Save Draft
-                </button>
-                <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-ink">
-                  <Sparkles size={16} /> Save &amp; Activate
-                </button>
-              </div>
-            </header>
-
-            <div className="grid gap-6 xl:grid-cols-[1.45fr_0.9fr]">
-              <section id="add-item" className="rounded-3xl border border-ink/10 bg-white p-6">
-                <div className="mb-6 flex items-start gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-ivory text-gold">
-                    <PlusCircle size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-ink">Section Basics</h3>
-                    <p className="text-sm text-ink/70">Add, edit, and delete records for {cardTitles[activeModule]?.toLowerCase()}.</p>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-                  {renderFields()}
-
-                  {hasImageField && (
-                    <label className="text-sm font-semibold text-ink sm:col-span-2">
-                      Upload Image (System)
-                      <input
-                        type="file"
-                        accept={imageAcceptTypes}
-                        onChange={handleImageFileChange}
-                        className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
-                      />
-                    </label>
-                  )}
-
-                  {imageFileName && <p className="text-xs text-ink/70 sm:col-span-2">Selected: {imageFileName}</p>}
-                  {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
-                  {status === "success" && <p className="text-sm text-green-700 sm:col-span-2">{editingId ? "Updated successfully." : "Added successfully."}</p>}
-
-                  <button type="submit" className="inline-flex w-fit items-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-champagne" disabled={status === "loading"}>
-                    <Save size={16} />
-                    {status === "loading" ? "Saving..." : editingId ? "Update" : "Add"}
-                  </button>
-
-                  {editingId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetActiveForm();
-                        setStatus("idle");
-                        setError("");
-                      }}
-                      className="inline-flex w-fit items-center gap-2 rounded-xl border border-ink/20 px-5 py-2.5 text-sm font-semibold text-ink"
-                    >
-                      Cancel Edit
-                    </button>
-                  )}
-                </form>
-              </section>
-
-              <section className="rounded-3xl border border-ink/10 bg-white p-6">
-                <div className="mb-4 flex items-center gap-3 rounded-xl border border-ink/15 bg-ivory px-3 py-2">
-                  <Search size={16} className="text-gold" />
-                  <span className="text-sm font-medium text-ink/80">Section Preview</span>
-                </div>
-                <h3 className="text-xl font-bold text-ink">Current {cardTitles[activeModule]}</h3>
-                <p className="mt-1 text-sm text-ink/70">This content will be rendered on the public website.</p>
-                <div className="mt-6 grid gap-6">
-                  {/* Category Filter for Projects */}
-                  {/* {activeModule === "projects" && (
-                    <div className="flex flex-wrap gap-2 border-b border-ink/10 pb-4">
-                      {["all", "modern", "classic", "spa", "sauna", "steam"].map((cat) => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => setProjectFilter(cat)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
-                            projectFilter === cat
-                              ? "bg-ink text-champagne"
-                              : "border border-ink/20 text-ink/70 hover:bg-ivory"
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  )} */}
-
-                  {((lists[activeModule] || []).filter((item) => {
-                    if (activeModule === "projects" && projectFilter !== "all") {
-                      return item.category === projectFilter;
-                    }
-                    return true;
-                  })).map((item) => (
-                    <div key={item._id} className="rounded-2xl border border-ink/10 bg-white p-3">
-                      {renderListCard(item)}
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(item)}
-                          className="rounded-lg border border-ink/25 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ivory"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item._id)}
-                          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {!(lists[activeModule] || []).filter((item) => {
-                    if (activeModule === "projects" && projectFilter !== "all") {
-                      return item.category === projectFilter;
-                    }
-                    return true;
-                  }).length && <p className="text-sm text-ink/60">No items yet.</p>}
-                </div>
-              </section>
-            </div>
+        <div className="px-4 py-5 sm:px-7">
+          <div className="mb-4 flex items-center justify-between lg:hidden">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen((current) => !current)}
+              className="inline-flex items-center gap-2 rounded-2xl border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-ivory"
+            >
+              <Menu size={16} />
+              {isSidebarOpen ? "Hide menu" : "Show menu"}
+            </button>
           </div>
-        )}
+          {isDashboard ? (
+            renderDashboard()
+          ) : isEnquiryModule ? (
+            <div>
+              <header className="mb-6 rounded-3xl border border-ink/10 bg-white p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Enquiries</p>
+                    <h2 className="mt-2 text-2xl font-bold text-ink">{cardTitles[activeModule]}</h2>
+                  </div>
+                  <div className="rounded-3xl bg-ivory px-4 py-3 text-sm text-ink/70">Total: {activeModule === "contact-enquiries" ? lists.contacts.length : lists.quotes.length}</div>
+                </div>
+              </header>
+              {error && <p className="mb-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+              {renderEnquiryList()}
+            </div>
+          ) : isManageView ? renderManageListPanel() : (
+            <div>
+              <header className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-ink/10 bg-white px-6 py-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Content Management</p>
+                  <h2 className="mt-2 text-2xl font-bold text-ink">{activeSidebarLabel}</h2>
+                </div>
+              </header>
+
+              <div className={`grid gap-6 ${editingId ? "" : "xl:grid-cols-[1.5fr_1fr]"}`}>
+                <section id="add-item" className="rounded-3xl border border-ink/10 bg-white p-6">
+                  <div className="mb-6 flex items-start gap-3">
+                    <div className="grid h-11 w-11 place-items-center rounded-2xl bg-ivory text-gold">
+                      <PlusCircle size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-ink">
+                        {editingId ? "Edit item" : activeAction === "manage" ? "Manage items" : "Add new item"}
+                      </h3>
+                      <p className="text-sm text-ink/70">
+                        {editingId
+                          ? "Update the selected item details."
+                          : activeAction === "manage"
+                          ? "Review current items and edit or delete entries from this section."
+                          : "Use the form to add or update website content for the selected section."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
+                    {renderFields()}
+
+                    {hasImageField && (
+                      <label className="text-sm font-semibold text-ink sm:col-span-2">
+                        Upload Image {activeModule === "testimonials" ? "(optional)" : ""}
+                        <input
+                          ref={imageInputRef}
+                          type="file"
+                          accept={imageAcceptTypes}
+                          onChange={handleImageFileChange}
+                          className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+                          // required=
+                          // required={false}
+                          required={activeModule === "products" && !editingId}
+                        />
+                      </label>
+                    )}
+
+                    {imageFileName && <p className="text-xs text-ink/70 sm:col-span-2">Selected: {imageFileName}</p>}
+                    {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
+                    {status === "success" && <p className="text-sm text-green-700 sm:col-span-2">{editingId ? "Updated successfully." : "Added successfully."}</p>}
+
+                    <button type="submit" className="inline-flex w-fit items-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-champagne" disabled={status === "loading"}>
+                      <Save size={16} />
+                      {status === "loading" ? "Saving..." : editingId ? "Update" : "Add"}
+                    </button>
+
+                    {editingId && (
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="inline-flex w-fit items-center gap-2 rounded-xl border border-ink/20 px-5 py-2.5 text-sm font-semibold text-ink"
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                  </form>
+                </section>
+
+                {!editingId && (
+                  <section className="rounded-3xl border border-ink/10 bg-white p-6">
+                    <div className="mb-4 flex items-center gap-3 rounded-xl border border-ink/15 bg-ivory px-3 py-2">
+                      <Search size={16} className="text-gold" />
+                      <span className="text-sm font-medium text-ink/80">Section Preview</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-ink">Current {cardTitles[activeModule]}</h3>
+                    <p className="mt-1 text-sm text-ink/70">This content is shown on the public website.</p>
+                    <div className="mt-6">
+                      {activeModule === "settings" ? (
+                        <div className="rounded-2xl border border-ink/10 bg-ivory p-6">
+                          <h4 className="text-lg font-semibold text-ink">Saved Settings</h4>
+                          <div className="mt-4 space-y-2 text-sm text-ink/70">
+                            <p><span className="font-semibold text-ink">Company:</span> {lists.settings.companyName || "—"}</p>
+                            <p><span className="font-semibold text-ink">Phone:</span> {lists.settings.phone || "—"}</p>
+                            <p><span className="font-semibold text-ink">Email:</span> {lists.settings.email || "—"}</p>
+                            <p><span className="font-semibold text-ink">Address:</span> {lists.settings.address || "—"}</p>
+                            <p><span className="font-semibold text-ink">WhatsApp:</span> {lists.settings.whatsappNumber || "—"}</p>
+                            <p><span className="font-semibold text-ink">Footer Text:</span> {lists.settings.footerText || "—"}</p>
+                          </div>
+                        </div>
+                      ) : activeAction === "add" && ["products", "testimonials", "gallery", "team"].includes(activeModule) ? (
+                        renderSectionPreview()
+                      ) : lists[activeModule].length === 0 ? (
+                        <p className="text-sm text-ink/60">No items yet.</p>
+                      ) : activeModule === "products" && activeAction === "manage" ? (
+                        <div className="space-y-4">
+                          {lists.products.map((product) => (
+                            <div key={product._id} className="rounded-3xl border border-ink/10 bg-ivory p-4 shadow-sm">
+                              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="flex-1">
+                                  <div className="flex flex-wrap items-center gap-3">
+                                    <h4 className="text-lg font-bold text-ink">{product.name}</h4>
+                                    {product.category && <span className="rounded-full bg-gold/10 px-3 py-1 text-xs font-semibold uppercase text-gold">{product.category}</span>}
+                                  </div>
+                                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                                    <p className="text-sm text-ink/70">Size: {product.size || "—"}</p>
+                                    <p className="text-sm text-ink/70">Price: {product.price || "—"}</p>
+                                    <p className="text-sm text-ink/70">Status: {product.status || "—"}</p>
+                                  </div>
+                                  {product.shortDescription && <p className="mt-3 text-sm text-ink/80">{product.shortDescription}</p>}
+                                </div>
+                                <div className="flex flex-wrap gap-2 pt-4 sm:pt-0 sm:shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => prepareFormForEdit(product)}
+                                    className="rounded-lg border border-ink/25 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-white"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDelete(product._id)}
+                                    className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid gap-4">
+                          {lists[activeModule].map((item) => (
+                            <div key={item._id} className="rounded-2xl border border-ink/10 bg-ivory p-4">
+                              {renderListCard(item)}
+                              <div className="mt-3 flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => prepareFormForEdit(item)}
+                                  className="rounded-lg border border-ink/25 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-white"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(item._id)}
+                                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

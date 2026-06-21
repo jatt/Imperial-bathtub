@@ -17,6 +17,8 @@ const sectionItemSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+sectionItemSchema.index({ section: 1 });
+
 const SectionItem = mongoose.model("SectionItem", sectionItemSchema);
 
 export default SectionItem;

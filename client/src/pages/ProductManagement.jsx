@@ -1,114 +1,257 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import api from "../api/http";
 
 export default function ProductManagement() {
   const { token } = useContext(AuthContext);
+
   const [products, setProducts] = useState([]);
-  
-  // Form States
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [category, setCategory] = useState("jacuzzi");
+
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("bathtubs");
+  const [size, setSize] = useState("");
+  const [price, setPrice] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
-  const [gallery, setGallery] = useState([]);
+  const [features, setFeatures] = useState("");
 
-  // Fetch Existing Products for List (Assuming a public or admin endpoint exists)
-  const fetchProducts = () => {
-    fetch("http://localhost:5000/api/admin/dashboard", { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      // A dedicated list endpoint can be used here if needed.
+  const [image, setImage] = useState(null);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await api.get("/products", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          limit: 100,
+          page: 1,
+        },
+      });
+
+      setProducts(response.data || []);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    }
   };
+
+  useEffect(() => {
+    if (token) {
+      fetchProducts();
+    }
+  }, [token]);
+
+  // const handleFormSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   const formData = new FormData();
+
+  //   formData.append("name", name);
+  //   formData.append("category", category);
+  //   formData.append("size", size);
+  //   formData.append("price", price);
+  //   formData.append("shortDescription", shortDescription);
+  //   formData.append("description", description);
+  //   formData.append("features", features);
+
+  //   // IMAGE OPTIONAL
+  //   if (image) {
+  //     formData.append("image", image);
+  //   }
+
+  //   try {
+  //     const response = await fetch(
+  //       "http://localhost:5000/api/admin/products",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: formData,
+  //       }
+  //     );
+
+  //     const data = await response.json();
+
+  //     if (response.ok) {
+  //       alert("Product Created Successfully!");
+
+  //       setName("");
+  //       setSize("");
+  //       setPrice("");
+  //       setShortDescription("");
+  //       setDescription("");
+  //       setFeatures("");
+  //       setImage(null);
+
+  //       fetchProducts();
+  //     } else {
+  //       alert(data.message || data.error || "Failed to create product");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Something went wrong");
+  //   }
+  // };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
-    formData.append("title", title);
-    formData.append("slug", slug.toLowerCase().replace(/ /g, "-"));
-    formData.append("category", category);
-    formData.append("shortDescription", shortDescription);
+
+    formData.append("name", name);
     formData.append("description", description);
-    
-    // Single Main Thumbnail
-    if (image) formData.append("image", image);
-    
-    // Multiple Gallery Images
-    for (let i = 0; i < gallery.length; i++) {
-      formData.append("gallery", gallery[i]);
+
+    if (category) formData.append("category", category);
+    if (size) formData.append("size", size);
+    if (price) formData.append("price", price);
+    if (shortDescription) {
+      formData.append("shortDescription", shortDescription);
     }
 
-    // Dummy complex array types standardizing logic as required by database schema
-    formData.append("features", JSON.stringify([{ title: "Premium Build", text: "Heavy duty materials" }]));
-    formData.append("specs", JSON.stringify([{ label: "Warranty", value: "5 Years" }]));
+    if (features) {
+      formData.append("features", features);
+    }
+
+    // Image Optional
+    if (image) {
+      formData.append("image", image);
+    }
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/products", {
+      const response = await fetch("http://localhost:5000/api/products", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
+        body: formData,
       });
+
       const data = await response.json();
-      if (data.success) {
-        alert("Product Created Successfully!");
-        // Reset state
-        setTitle(""); setSlug(""); setShortDescription(""); setDescription("");
+
+      if (response.ok) {
+        alert("Product Created Successfully");
       } else {
-        alert(data.error);
+        alert(data.message);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   };
-
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Add New Dynamic Product</h2>
+      <h2 className="text-2xl font-bold mb-6">Add New Product</h2>
+
       <form onSubmit={handleFormSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Product Title</label>
-            <input type="text" className="mt-1 w-full p-2 border rounded" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Unique Slug</label>
-            <input type="text" className="mt-1 w-full p-2 border rounded" value={slug} onChange={(e) => setSlug(e.target.value)} required />
-          </div>
+        {/* Product Name */}
+        <div>
+          <label className="block text-sm font-medium">Product Name *</label>
+
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required={!editingId}
+          />
         </div>
 
+        {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Category</label>
-          <select className="mt-1 w-full p-2 border rounded" value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="jacuzzi">Jacuzzi</option>
-            <option value="soaking">Soaking</option>
-            <option value="spa">Spa</option>
-            <option value="outdoor">Outdoor</option>
+          <label className="block text-sm font-medium">Category *</label>
+
+          <select
+            className="w-full p-2 border rounded"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="bathtubs">Bathtubs</option>
+            <option value="shower-solutions">Shower Solutions</option>
+            <option value="wellness">Wellness & Spa</option>
+            <option value="faucets-accessories">Faucets & Accessories</option>
           </select>
         </div>
 
+        {/* Size */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Short Description (About Us Line)</label>
-          <input type="text" className="mt-1 w-full p-2 border rounded" value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} required />
+          <label className="block text-sm font-medium">Size *</label>
+
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            placeholder="1800 x 800 mm"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+            required
+          />
         </div>
 
+        {/* Price */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Full Description</label>
-          <textarea className="mt-1 w-full p-2 border rounded h-24" value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <label className="block text-sm font-medium">Price *</label>
+
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            placeholder="₹50,000"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            required
+          />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Main Banner Image</label>
-            <input type="file" className="mt-1 w-full" onChange={(e) => setImage(e.target.files[0])} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Gallery Images (Multiple)</label>
-            <input type="file" className="mt-1 w-full" multiple onChange={(e) => setGallery(e.target.files)} />
-          </div>
+        {/* Short Description */}
+        <div>
+          <label className="block text-sm font-medium">Short Description</label>
+
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={shortDescription}
+            onChange={(e) => setShortDescription(e.target.value)}
+          />
         </div>
 
-        <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
-          Save Product to DB
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium">Description *</label>
+
+          <textarea
+            className="w-full p-2 border rounded h-32"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required={!editingId}
+          />
+        </div>
+
+        {/* Features */}
+        <div>
+          <label className="block text-sm font-medium">Features</label>
+
+          <textarea
+            className="w-full p-2 border rounded h-24"
+            placeholder="Feature 1, Feature 2, Feature 3"
+            value={features}
+            onChange={(e) => setFeatures(e.target.value)}
+          />
+        </div>
+
+        {/* Image Optional */}
+        <div>
+          <label className="block text-sm font-medium">
+            Product Image (Optional)
+          </label>
+
+          <input
+            type="file"
+            className="w-full"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files[0])}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="bg-green-600 text-white px-6 py-2 rounded"
+        >
+          Save Product
         </button>
       </form>
     </div>

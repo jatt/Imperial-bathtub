@@ -17,6 +17,10 @@ const leadSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+leadSchema.index({ email: 1 });
+leadSchema.index({ status: 1 });
+leadSchema.index({ createdAt: -1 });
+
 const Lead = mongoose.model("Lead", leadSchema);
 
 export default Lead;

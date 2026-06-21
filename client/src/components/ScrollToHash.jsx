@@ -11,7 +11,7 @@ const ScrollToHash = () => {
     }
 
     const timer = window.setTimeout(() => {
-      document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" });
+      document.querySelector(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 60);
 
     return () => window.clearTimeout(timer);

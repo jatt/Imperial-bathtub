@@ -1,7 +1,20 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 
-const filters = ["all", "modern", "classic", "spa", ];
+const filters = [
+  { key: "all", label: "All Gallery" },
+  { key: "bathtubs", label: "Bathtubs" },
+  { key: "shower-solutions", label: "Shower Solutions" },
+  { key: "wellness", label: "Wellness & Spa" },
+  { key: "hotels-villas", label: "Hotels & Villas" },
+];
+
+const categoryLabels = {
+  bathtubs: "Bathtubs",
+  "shower-solutions": "Shower Solutions",
+  wellness: "Wellness & Spa",
+  "hotels-villas": "Hotels & Villas",
+};
 
 const PortfolioGrid = ({ projects }) => {
   const [activeFilter, setActiveFilter] = useState("all");
@@ -16,16 +29,16 @@ const PortfolioGrid = ({ projects }) => {
       <div className="mb-8 flex flex-wrap gap-3">
         {filters.map((filter) => (
           <button
-            key={filter}
+            key={filter.key}
             type="button"
-            onClick={() => setActiveFilter(filter)}
+            onClick={() => setActiveFilter(filter.key)}
             className={`px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] transition ${
-              activeFilter === filter
+              activeFilter === filter.key
                 ? "bg-champagne text-ink"
                 : "border border-white/15 text-white/70 hover:border-champagne hover:text-champagne"
             }`}
           >
-            {filter}
+            {filter.label}
           </button>
         ))}
       </div>

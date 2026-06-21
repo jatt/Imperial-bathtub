@@ -36,6 +36,10 @@ const contactSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+contactSchema.index({ email: 1 });
+contactSchema.index({ status: 1 });
+contactSchema.index({ createdAt: -1 });
+
 const Contact = mongoose.model("Contact", contactSchema);
 
 export default Contact;

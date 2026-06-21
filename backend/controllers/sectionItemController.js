@@ -23,14 +23,30 @@ const validatePayload = (section, payload) => {
 };
 
 export const getSectionItems = asyncHandler(async (req, res) => {
-  const { section } = req.query;
+  const { section, limit, page, fields } = req.query;
   const filters = {};
 
   if (section) {
     filters.section = section;
   }
 
-  const items = await SectionItem.find(filters).sort({ createdAt: -1 });
+  const currentPage = Math.max(Number(page) || 1, 1);
+  const perPage = Math.min(Number(limit) || 50, 100);
+  const skip = (currentPage - 1) * perPage;
+
+  let query = SectionItem.find(filters).sort({ createdAt: -1 }).skip(skip).limit(perPage);
+
+  if (fields) {
+    query = query.select(fields.split(",").map((field) => field.trim()).join(" "));
+  }
+
+  query = query.lean();
+  const [items, total] = await Promise.all([query, SectionItem.countDocuments(filters)]);
+
+  res.setHeader("X-Total-Count", String(total));
+  res.setHeader("X-Page", String(currentPage));
+  res.setHeader("X-Per-Page", String(perPage));
+
   res.json(items);
 });
 

@@ -9,14 +9,13 @@ const Hero = ({ onQuoteClick }) => {
       <div className="hero__overlay" />
       <div className="container hero__content fade-in">
         <span className="eyebrow">Modern wellness spaces</span>
-        <h1>Luxury Wellness Redefined</h1>
+        <h1>Luxury Bathroom Solutions for Modern Living</h1>
         <p>
-          Premium bathtubs, spa, sauna, and wellness spaces planned with refined
-          materials and practical project guidance.
+          Premium bathtubs, shower solutions, wellness products, and bathroom accessories designed to bring comfort, elegance, and relaxation to every space.
         </p>
         <div className="hero__actions">
           <button className="btn btn--primary" onClick={onQuoteClick}>
-            Request quote <ArrowRight size={18} />
+            Get Quote <ArrowRight size={18} />
           </button>
           <Link className="btn btn--ghost" to="/contact">
             <Phone size={18} />

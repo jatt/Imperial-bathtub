@@ -2,15 +2,81 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    slug: { type: String, unique: true, lowercase: true, sparse: true },
-    size: { type: String, required: true, trim: true },
-    price: { type: String, required: true, trim: true },
-    description: { type: String, required: true, trim: true },
-    image: { type: String, required: true },
-    category: { type: String, default: "jacuzzi" }
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      sparse: true,
+    },
+
+    // category: {
+    //   type: String,
+    //   enum: [
+    //     "bathtubs",
+    //     "shower-solutions",
+    //     "wellness",
+    //     "faucets-accessories",
+    //   ],
+    //   default: "bathtubs",
+    // },
+    category: {
+  type: String,
+  enum: [
+    "bathtubs",
+    "jacuzzi",
+    "shower-solutions",
+    "wellness",
+    "faucets-accessories"
+  ],
+  default: "bathtubs"
+},
+
+    size: {
+      type: String,
+      default: "",
+    },
+
+    price: {
+      type: String,
+      default: "",
+    },
+
+    shortDescription: {
+      type: String,
+      default: "",
+    },
+
+    description: {
+      type: String,
+      default: "",
+    },
+
+    features: [
+      {
+        type: String,
+      },
+    ],
+
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
+
+    image: {
+      type: String,
+      default: "",
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 const Product = mongoose.model("Product", productSchema);

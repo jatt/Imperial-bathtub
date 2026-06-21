@@ -65,54 +65,68 @@ const Contact = () => {
         </div>
       </section> */}
 
-      <section className="relative overflow-hidden bg-ink py-24 text-white">
+      {/* <section className="relative overflow-hidden bg-ink py-24 text-white">
   <div className="container pl-20">
-    <p className="mb-4">
+    <p className="mb-4 uppercase tracking-[0.24em] text-sm text-gold">
       Contact Us
     </p>
 
     <h1 className="text-5xl font-bold leading-tight">
-      Begin your luxury Jacuzzi consultation
+      Let's Discuss Your Bathroom & Wellness Requirements
     </h1>
+    <p className="mt-6 max-w-2xl text-lg text-white/80">
+      Whether you're looking for a premium bathtub, shower solution, wellness product, or simply need expert guidance, our team is here to help. Share your requirements, and we'll assist you in finding the right solution for your space.
+    </p>
   </div>
-</section>
+</section> */}
 
       {/* CONTACT SECTION */}
       <section className="bg-ivory py-16">
         <div className="container grid gap-10 lg:grid-cols-2 items-start">
           <div className="max-w-lg pl-6 md:pl-12">
             <h2 className="text-[32px] font-bold mb-8 text-black">
-              Share your project details
+              Contact Us
             </h2>
 
             <div className="space-y-6 text-black text-lg">
-              
-              {/* Phone */}
+              <p>
+                Request a quote or send your enquiry and our team will help you find the right solution for your space.
+              </p>
+
               <div className="flex items-center gap-6">
                 <Phone className="w-5 h-5 shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">+91 62019 86245</span>
+                <a href="tel:+916201986245" className="font-medium text-ink transition hover:text-gold" aria-label="Call Imperial Bath Solutions">
+                  +91 62019 86245
+                </a>
               </div>
-              
-              {/* Mail */}
+
               <div className="flex items-center gap-6">
                 <Mail className="w-5 h-5 shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">imperialbathsolution@gmail.com</span>
+                <a href="mailto:imperialbathsolution@gmail.com" className="font-medium text-ink transition hover:text-gold" aria-label="Email Imperial Bath Solutions">
+                  imperialbathsolution@gmail.com
+                </a>
               </div>
-              
-              {/* Address */}
+
               <div className="flex items-start gap-6">
                 <MapPin className="w-5 h-5 shrink-0 mt-1" strokeWidth={1.5} />
                 <span className="font-medium leading-relaxed">
-                  Hanuman Tikri, Ward No. 24 Shiv Bihar Colony 2 Near Greenwich School, 
-                  Tiwari Chowk Deoghar, Jharkhand – 814112 India
+                  Hanuman Tikri, Ward No. 24
+                  <br />
+                  Shiv Bihar Colony 2
+                  <br />
+                  Near Greenwich School, Tiwari Chowk
+                  <br />
+                  Deoghar, Jharkhand – 814112
+                  <br />
+                  India
                 </span>
               </div>
-
             </div>
           </div>
 
           {/* FORM */}
           <form
+            id="quote-form"
             onSubmit={handleSubmit}
             className="bg-white p-6 shadow rounded"
           >
@@ -121,7 +135,7 @@ const Contact = () => {
                 className="input-field"
                 type="text"
                 name="name"
-                placeholder="Your Name"
+                placeholder="Your Name (required)"
                 value={form.name}
                 onChange={handleChange}
                 required
@@ -131,7 +145,7 @@ const Contact = () => {
                 className="input-field"
                 type="email"
                 name="email"
-                placeholder="Your Email"
+                placeholder="Email Address (required)"
                 value={form.email}
                 onChange={handleChange}
                 required
@@ -141,7 +155,7 @@ const Contact = () => {
                 className="input-field"
                 type="tel"
                 name="phone"
-                placeholder="Phone Number"
+                placeholder="Phone Number (required)"
                 value={form.phone}
                 onChange={handleChange}
                 required

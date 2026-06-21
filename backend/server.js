@@ -13,6 +13,9 @@ import contactRoutes from "./routes/contactRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import testimonialRoutes from "./routes/testimonialRoutes.js";
 import sectionItemRoutes from "./routes/sectionItemRoutes.js";
+import settingRoutes from "./routes/settingRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import { getDashboardSummary } from "./controllers/adminController.js";
 
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js"; // ✅ uncomment
 
@@ -25,6 +28,7 @@ const app = express();
 // ✅ ENV VARIABLES
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "*";
+let dbConnected = false;
 
 // ✅ MIDDLEWARES
 app.use(
@@ -56,6 +60,7 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
     message: "MERN API is running 🚀",
+    database: dbConnected ? "connected" : "disconnected",
   });
 });
 
@@ -65,6 +70,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/section-items", sectionItemRoutes);
+app.use("/api/settings", settingRoutes);
+app.get("/api/admin/dashboard", getDashboardSummary);
+app.use("/api/admin", adminRoutes);
 
 // ✅ ERROR HANDLING (LAST)
 app.use(notFound);
@@ -73,14 +81,27 @@ app.use(errorHandler);
 // ✅ START SERVER
 const startServer = async () => {
   try {
-    await connectDB();
-    console.log("✅ MongoDB Connected");
+    dbConnected = await connectDB();
+    if (!dbConnected) {
+      console.warn("⚠️ Starting API without MongoDB connection.");
+    }
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
     });
+
+    server.on("error", (error) => {
+      if (error.code === "EADDRINUSE") {
+        console.error(
+          `❌ Port ${PORT} is already in use. Please stop the process using this port or set a different PORT in your environment.`
+        );
+      } else {
+        console.error("❌ Server error:", error);
+      }
+      process.exit(1);
+    });
   } catch (error) {
-    console.error("❌ DB Connection Failed:", error.message);
+    console.error("❌ Server startup failed:", error.message);
     process.exit(1);
   }
 };

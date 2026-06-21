@@ -13,11 +13,18 @@ export const protect = asyncHandler(async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  req.user = await User.findById(decoded.id).select("-password");
+  // ⚡ OPTIMIZATION: Use JWT payload directly instead of database lookup
+  // This eliminates one database query per request
+  req.user = {
+    _id: decoded.id,
+    id: decoded.id,
+    email: decoded.email,
+    role: decoded.role || "user"
+  };
 
-  if (!req.user) {
+  if (!req.user._id) {
     res.status(401);
-    throw new Error("Not authorized, user missing");
+    throw new Error("Not authorized, invalid token");
   }
 
   next();

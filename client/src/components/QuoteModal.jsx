@@ -46,9 +46,9 @@ const QuoteModal = ({ isOpen, onClose }) => {
         <button className="icon-button modal__close" onClick={onClose}>
           <X size={18} />
         </button>
-        <span className="eyebrow">Request a quote</span>
-        <h2>Discuss your project</h2>
-        <p>Share a few details and the team can guide you on the next step.</p>
+        <span className="eyebrow">Get Quote</span>
+        <h2>Request a Quote</h2>
+        {/* <p>Share your requirements and our team will help you find the right solution for your space.</p> */}
 
         <form className="form" onSubmit={handleSubmit}>
           <div className="form__row">
@@ -57,12 +57,12 @@ const QuoteModal = ({ isOpen, onClose }) => {
               <input name="name" value={form.name} onChange={handleChange} required />
             </label>
             <label>
-              Phone
-              <input name="phone" value={form.phone} onChange={handleChange} />
+              Phone Number
+              <input name="phone" value={form.phone} onChange={handleChange} required />
             </label>
           </div>
           <label>
-            Email
+            Email Address
             <input
               name="email"
               type="email"
@@ -71,12 +71,12 @@ const QuoteModal = ({ isOpen, onClose }) => {
               required
             />
           </label>
-          <label>
-            Name of the products
+          {/* <label>
+            Product Interested In
             <input name="interest" value={form.interest} onChange={handleChange} />
-          </label>
+          </label> */}
           <label>
-            Message/ Your Query
+            Your Query
             <textarea
               name="message"
               value={form.message}
@@ -89,7 +89,7 @@ const QuoteModal = ({ isOpen, onClose }) => {
             <p className="form__success">Request submitted successfully.</p>
           )}
           <button className="btn btn--primary btn--full" disabled={status === "loading"}>
-            {status === "loading" ? "Submitting..." : "Send request"}
+            {status === "loading" ? "Submitting..." : "Get My Quote"}
           </button>
         </form>
       </div>
