@@ -1,0 +1,4 @@
+- [x] Update Home products section to support pagination in chunks of 6
+- [x] Add Load More button and append next 6 products per click
+- [x] Preserve fallback/cache behavior for initial load and errors
+- [x] Verify implementation consistency in Home.jsx

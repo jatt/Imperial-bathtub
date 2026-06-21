@@ -28,11 +28,12 @@ const getFilterFromSearch = (search) => {
 
 const Products = ({ onQuoteClick }) => {
   const location = useLocation();
-  const [products, setProducts] = useState(() => getImmediateProducts(getFilterFromSearch(location.search)));
+  const perPage = 6; // items per page
+  const [products, setProducts] = useState(() => getImmediateProducts(getFilterFromSearch(location.search)).slice(0, perPage));
   const [activeFilter, setActiveFilter] = useState(() => getFilterFromSearch(location.search));
   const [isFetching, setIsFetching] = useState(false);
   const [page, setPage] = useState(1);
-  const perPage = 12;
+  
   const [total, setTotal] = useState(() => getImmediateProducts(getFilterFromSearch(location.search)).length);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ const Products = ({ onQuoteClick }) => {
     setActiveFilter((current) => (current === nextFilter ? current : nextFilter));
     setPage(1);
     const immediate = getImmediateProducts(nextFilter);
-    setProducts(immediate);
+    setProducts(immediate.slice(0, perPage));
     setTotal(immediate.length);
   }, [location.search]);
 
@@ -115,7 +116,7 @@ const Products = ({ onQuoteClick }) => {
                   setActiveFilter(filter.key);
                   setPage(1);
                   const immediate = getImmediateProducts(filter.key);
-                  setProducts(immediate);
+                  setProducts(immediate.slice(0, perPage));
                   setTotal(immediate.length);
                 }}
                 className={`px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] transition ${
@@ -141,7 +142,7 @@ const Products = ({ onQuoteClick }) => {
               </div>
 
               {/* Load more */}
-              {products.length < total && (
+              { products.length < total && (
                 <div className="mt-8 flex justify-center">
                   <button
                     type="button"

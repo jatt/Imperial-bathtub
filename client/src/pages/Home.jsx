@@ -2,7 +2,6 @@ import {
   ArrowRight,
   Bath,
   Check,
-  Gem,
   Package2,
   Ruler,
   ShieldCheck,
@@ -59,7 +58,11 @@ const fallbackAboutItems = [
 ];
 
 const Home = ({ onQuoteClick }) => {
-  const [products, setProducts] = useState(() => getImmediateProducts("all").slice(0, 6));
+  const perPage = 6;
+  const [products, setProducts] = useState(() => getImmediateProducts("all").slice(0, perPage));
+  const [productsPage, setProductsPage] = useState(1);
+  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
   const [testimonials, setTestimonials] = useState(() => getImmediateList("testimonials", fallbackTestimonials));
   const [aboutItems, setAboutItems] = useState(fallbackAboutItems);
   const [buyingGuideItems, setBuyingGuideItems] = useState(choosingTips);
@@ -69,14 +72,32 @@ const Home = ({ onQuoteClick }) => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const response = await productApi.getProducts({ limit: 6, fields: "name,slug,image,category,size,price,shortDescription,status" });
+        const response = await productApi.getProducts({
+          limit: perPage,
+          page: 1,
+          fields: "name,slug,image,category,size,price,shortDescription,status",
+        });
         const nextProducts = Array.isArray(response.data) ? response.data : [];
+        const totalCount = Number(response.headers?.["x-total-count"] || 0);
+
         if (nextProducts.length > 0) {
           setProducts(nextProducts);
           saveCachedProducts("all", nextProducts);
+          setProductsPage(1);
+          if (totalCount > 0) {
+            setHasMoreProducts(nextProducts.length < totalCount);
+          } else {
+            setHasMoreProducts(nextProducts.length === perPage);
+          }
+        } else {
+          setHasMoreProducts(false);
         }
       } catch {
-        setProducts((current) => (current.length ? current : getImmediateProducts("all").slice(0, 6)));
+        setProducts((current) => {
+          const fallback = current.length ? current : getImmediateProducts("all").slice(0, perPage);
+          setHasMoreProducts(fallback.length >= perPage);
+          return fallback;
+        });
       }
     };
 
@@ -138,7 +159,48 @@ const Home = ({ onQuoteClick }) => {
     loadProducts();
     loadTestimonials();
     loadSectionItems();
-  }, []);
+  }, [perPage]);
+
+  const handleLoadMoreProducts = async () => {
+    if (isLoadingMoreProducts || !hasMoreProducts) return;
+
+    try {
+      setIsLoadingMoreProducts(true);
+      const nextPage = productsPage + 1;
+      const response = await productApi.getProducts({
+        limit: perPage,
+        page: nextPage,
+        fields: "name,slug,image,category,size,price,shortDescription,status",
+      });
+      const incomingProducts = Array.isArray(response.data) ? response.data : [];
+      const totalCount = Number(response.headers?.["x-total-count"] || 0);
+
+      setProducts((current) => {
+        const seen = new Set(current.map((item) => item._id || item.slug));
+        const merged = [...current];
+        incomingProducts.forEach((item) => {
+          const key = item._id || item.slug;
+          if (!seen.has(key)) {
+            merged.push(item);
+          }
+        });
+        saveCachedProducts("all", merged);
+        return merged;
+      });
+
+      setProductsPage(nextPage);
+
+      if (totalCount > 0) {
+        setHasMoreProducts(nextPage * perPage < totalCount);
+      } else {
+        setHasMoreProducts(incomingProducts.length === perPage);
+      }
+    } catch {
+      setHasMoreProducts(false);
+    } finally {
+      setIsLoadingMoreProducts(false);
+    }
+  };
 
   return (
     <>
@@ -301,15 +363,29 @@ const Home = ({ onQuoteClick }) => {
             </Link>
           </div>
           {products.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {products.slice(0, 6).map((product) => (
+            <>
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {products.map((product) => (
                   <ProductCard
                     key={product._id || product.slug}
                     product={product}
                     onQuoteClick={onQuoteClick}
                   />
                 ))}
-            </div>
+              </div>
+              {hasMoreProducts && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleLoadMoreProducts}
+                    disabled={isLoadingMoreProducts}
+                    className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isLoadingMoreProducts ? "Loading..." : "Load More"}
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="rounded-2xl border border-ink/10 bg-ivory p-8 text-center">
               <p className="text-sm font-semibold text-ink/70">
@@ -371,9 +447,9 @@ const Home = ({ onQuoteClick }) => {
         className="p-10 bg-charcoal text-white"
       >
         <div className="container-shell">
-        {/* <SectionHeading eyebrow="Gallery" /> */}
+          {/* <SectionHeading eyebrow="Gallery" /> */}
           <div className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          
+
             <SectionHeading
               eyebrow="Gallery"
               title="Explore premium bathroom spaces and product installations."
@@ -408,7 +484,7 @@ const Home = ({ onQuoteClick }) => {
               title="Trusted by homeowners, interior designers, and luxury hospitality projects."
               text="Our commitment to quality, comfort, and elegant design is reflected in every customer experience."
             />
-          <div className="mt-10">
+            <div className="mt-10">
               <TestimonialCarousel testimonials={testimonials} />
             </div>
           </div>
