@@ -114,7 +114,7 @@ const Footer = () => {
             <div className="flex gap-3 items-center ml-1">
               <Phone size={22} className="text-yellow-400 shrink-0" />
               <a href="tel:+916201986245" className="text-gray-300 transition hover:text-yellow-400" aria-label="Call Imperial Bath Solutions">
-                +91 62019 862459
+                +91 62019 86245
               </a>
             </div>
 
