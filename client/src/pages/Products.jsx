@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { productApi } from "../api/http";
 import CTA from "../components/CTA";
@@ -33,17 +33,13 @@ const Products = ({ onQuoteClick }) => {
   const [activeFilter, setActiveFilter] = useState(() => getFilterFromSearch(location.search));
   const [isFetching, setIsFetching] = useState(false);
   const [page, setPage] = useState(1);
-  
-  const [total, setTotal] = useState(() => getImmediateProducts(getFilterFromSearch(location.search)).length);
 
-  useEffect(() => {
-    const nextFilter = getFilterFromSearch(location.search);
-    setActiveFilter((current) => (current === nextFilter ? current : nextFilter));
-    setPage(1);
-    const immediate = getImmediateProducts(nextFilter);
-    setProducts(immediate.slice(0, perPage));
-    setTotal(immediate.length);
-  }, [location.search]);
+  const locationFilter = useMemo(
+    () => getFilterFromSearch(location.search),
+    [location.search]
+  );
+  const normalizedFilter = locationFilter === activeFilter ? activeFilter : locationFilter;
+  const [total, setTotal] = useState(() => getImmediateProducts(locationFilter).length);
 
   useEffect(() => {
     let active = true;
@@ -70,14 +66,15 @@ const Products = ({ onQuoteClick }) => {
       } catch {
         if (!active) return;
         if (page === 1) {
-          const fallback = filterCatalog(getImmediateProducts(activeFilter), activeFilter);
+          const fallback = filterCatalog(getImmediateProducts(normalizedFilter), normalizedFilter);
           setProducts(fallback);
-          saveCachedProducts(activeFilter, fallback);
+          saveCachedProducts(normalizedFilter, fallback);
           setTotal(fallback.length);
         }
       } finally {
-        if (!active) return;
-        setIsFetching(false);
+        if (active) {
+          setIsFetching(false);
+        }
       }
     };
 
@@ -85,7 +82,11 @@ const Products = ({ onQuoteClick }) => {
     return () => {
       active = false;
     };
-  }, [activeFilter, page]);
+  }, [normalizedFilter, page]);
+
+  const productsToRender = page === 1
+    ? products.slice(0, perPage)
+    : products;
 
   return (
     <>
@@ -113,17 +114,17 @@ const Products = ({ onQuoteClick }) => {
                 key={filter.key}
                 type="button"
                 onClick={() => {
+                  if (filter.key === activeFilter) return;
                   setActiveFilter(filter.key);
                   setPage(1);
                   const immediate = getImmediateProducts(filter.key);
                   setProducts(immediate.slice(0, perPage));
                   setTotal(immediate.length);
                 }}
-                className={`px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] transition ${
-                  activeFilter === filter.key
-                    ? "bg-ink text-white"
-                    : "border border-ink/15 bg-white text-ink hover:border-ink"
-                }`}
+                className={`px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] transition ${activeFilter === filter.key
+                  ? "bg-ink text-white"
+                  : "border border-ink/15 bg-white text-ink hover:border-ink"
+                  }`}
               >
                 {filter.label}
               </button>
@@ -132,7 +133,7 @@ const Products = ({ onQuoteClick }) => {
           {products.length > 0 ? (
             <>
               <div className="product-grid">
-                {products.map((product) => (
+                {productsToRender.map((product) => (
                   <ProductCard
                     product={product}
                     key={product._id || product.slug}
@@ -142,7 +143,7 @@ const Products = ({ onQuoteClick }) => {
               </div>
 
               {/* Load more */}
-              { products.length < total && (
+              {products.length < total && (
                 <div className="mt-8 flex justify-center">
                   <button
                     type="button"
@@ -158,7 +159,9 @@ const Products = ({ onQuoteClick }) => {
           ) : (
             <div className="rounded-2xl border border-ink/10 bg-white p-12 text-center my-6">
               <p className="text-sm font-semibold text-ink/75">
-                No products are listed in our catalog at the moment. Please check back later or contact us directly.
+                {activeFilter !== "all"
+                  ? "No Gallery added in this category"
+                  : "No products are listed in our catalog at the moment. Please check back later or contact us directly."}
               </p>
             </div>
           )}

@@ -242,7 +242,7 @@ const AdminPannel = () => {
 
   const loadAllData = async () => {
     try {
-      const productRequest = productApi.getProducts({ limit: 25, page: 1 });
+      const productRequest = productApi.getProducts({ limit: 25, page: 1, fields: "name,slug,image,gallery,category,size,price,shortDescription,description,features,status" });
       const otherRequests = Promise.all([
         testimonialApi.getTestimonials(),
         sectionItemApi.getItems("projects", { limit: 9, page: 1 }),
@@ -286,8 +286,10 @@ const AdminPannel = () => {
   };
 
   useEffect(() => {
-    loadDashboardSummary();
-    loadAllData();
+    Promise.resolve().then(() => {
+      loadDashboardSummary();
+      loadAllData();
+    });
   }, []);
 
   useEffect(() => {
@@ -412,6 +414,40 @@ const AdminPannel = () => {
       setGalleryFileNames(files.map((file) => file.name));
       setError("");
     });
+  };
+
+  const removeCurrentMainImage = () => {
+    setForms((current) => ({
+      ...current,
+      products: { ...current.products, image: "" },
+    }));
+    setImageFileName("");
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  const removeGalleryPhotoAt = (indexToRemove) => {
+    setForms((current) => {
+      const existing = Array.isArray(current.products.gallery) ? current.products.gallery : [];
+      const nextGallery = existing.filter((_, idx) => idx !== indexToRemove);
+      return {
+        ...current,
+        products: { ...current.products, gallery: nextGallery },
+      };
+    });
+    setGalleryFileNames((current) => current.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const clearAllGalleryPhotos = () => {
+    setForms((current) => ({
+      ...current,
+      products: { ...current.products, gallery: [] },
+    }));
+    setGalleryFileNames([]);
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = "";
+    }
   };
 
   const syncProductCatalogCache = (nextProducts) => {
@@ -605,7 +641,14 @@ const AdminPannel = () => {
   const prepareFormForEdit = (item) => {
     const nextForm = { ...initialForms[activeModule], ...item };
     if (activeModule === "products") {
+      const normalizedDescription =
+        item?.description ??
+        item?.shortDescription ??
+        item?.productDescription ??
+        item?.details ??
+        "";
       nextForm.features = Array.isArray(item.features) ? item.features.join("\n") : item.features || "";
+      nextForm.description = typeof normalizedDescription === "string" ? normalizedDescription : String(normalizedDescription || "");
     }
     setForms((current) => ({ ...current, [activeModule]: nextForm }));
     setEditingId(item._id);
@@ -613,7 +656,9 @@ const AdminPannel = () => {
     setError("");
     setImageFileName("");
     setGalleryFileNames(Array.isArray(nextForm.gallery) ? nextForm.gallery.map((_, idx) => `Other Photo ${idx + 1}`) : []);
-    window.location.hash = "add-item";
+    if (typeof window !== "undefined") {
+      window.location.assign("#add-item");
+    }
   };
 
   const handleDelete = async (id) => {
@@ -1407,6 +1452,74 @@ const AdminPannel = () => {
                       <p className="text-xs text-ink/70 sm:col-span-2">
                         Selected other photos: {galleryFileNames.join(", ")}
                       </p>
+                    )}
+
+
+                    {activeModule === "products" && editingId && forms.products.image && (
+                      <div className="sm:col-span-2">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/60">Current Main Image</p>
+                        <img
+                          src={forms.products.image}
+                          alt={forms.products.name || "Current product image"}
+                          className="h-40 w-full rounded-2xl border border-ink/10 object-cover sm:w-72"
+                        />
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => imageInputRef.current?.click()}
+                            className="rounded-lg border border-ink/25 px-3 py-1.5 text-xs font-semibold text-ink hover:bg-white"
+                          >
+                            Change Main Image
+                          </button>
+                          <button
+                            type="button"
+                            onClick={removeCurrentMainImage}
+                            className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                          >
+                            Remove Main Image
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeModule === "products" && editingId && Array.isArray(forms.products.gallery) && forms.products.gallery.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink/60">Current Other Photos</p>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                          {forms.products.gallery.filter(Boolean).map((photo, idx) => (
+                            <div key={`${idx}-${photo.slice(0, 20)}`} className="relative">
+                              <img
+                                src={photo}
+                                alt={`Other photo ${idx + 1}`}
+                                className="h-24 w-full rounded-xl border border-ink/10 object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeGalleryPhotoAt(idx)}
+                                className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => galleryInputRef.current?.click()}
+                            className="rounded-lg border border-ink/25 px-3 py-1.5 text-xs font-semibold text-ink hover:bg-white"
+                          >
+                            Change Other Photos
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearAllGalleryPhotos}
+                            className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                          >
+                            Remove All Other Photos
+                          </button>
+                        </div>
+                      </div>
                     )}
                     {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
                     {status === "success" && <p className="text-sm text-green-700 sm:col-span-2">{editingId ? "Updated successfully." : "Added successfully."}</p>}

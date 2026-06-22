@@ -21,11 +21,11 @@ const ProductCard = ({ product, onQuoteClick }) => {
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-ink">
+      <div className="relative aspect-[4/3] overflow-hidden bg-white">
         <img
           src={product.image}
           alt={name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.02]"
           loading="eager"
           decoding="async"
         />

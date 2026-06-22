@@ -1,8 +1,8 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState } from "react";
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("adminToken") || null);
 
   const login = (newToken) => {
@@ -21,3 +21,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export { AuthContext, AuthProvider };

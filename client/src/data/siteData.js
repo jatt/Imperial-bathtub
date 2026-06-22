@@ -7,39 +7,6 @@ export const images = {
         "https://images.unsplash.com/photo-1759223607861-f0ef3e617739?auto=format&fit=crop&w=1600&q=85"
 };
 
-const gallery = {
-    nero: [
-        "https://images.unsplash.com/photo-1693320417682-ad805ed70d3c?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1724873290064-8a78a1d2c30e?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1723040211147-c843091a9142?auto=format&fit=crop&w=1400&q=80"
-    ],
-    aurelia: [
-        "https://images.unsplash.com/photo-1770941450515-50f2b8ca380b?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1753605788101-04d1e653e74a?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1759223607861-f0ef3e617739?auto=format&fit=crop&w=1400&q=80"
-    ],
-    solstice: [
-        "https://images.unsplash.com/photo-1621215058889-885f3d5a143c?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1693320417682-ad805ed70d3c?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1723040211147-c843091a9142?auto=format&fit=crop&w=1400&q=80"
-    ],
-    monaco: [
-        "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1615874694520-474822394e73?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1759223607861-f0ef3e617739?auto=format&fit=crop&w=1400&q=80"
-    ],
-    verona: [
-        "https://images.unsplash.com/photo-1759223607861-f0ef3e617739?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1621215058889-885f3d5a143c?auto=format&fit=crop&w=1400&q=80"
-    ],
-    aria: [
-        "https://images.unsplash.com/photo-1753605788101-04d1e653e74a?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80",
-        "https://images.unsplash.com/photo-1770941450515-50f2b8ca380b?auto=format&fit=crop&w=1400&q=80"
-    ],
-    
-};
 
 export const fallbackProducts = [
   {

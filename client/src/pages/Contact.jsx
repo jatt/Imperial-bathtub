@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Phone, Mail, MapPin, Send, CheckCircle } from "lucide-react";
 import { contactApi } from "../api/http";
 
@@ -43,7 +43,7 @@ const Contact = () => {
         phone: "",
         message: "",
       });
-    } catch (error) {
+    } catch {
       setStatus({
         type: "error",
         message: "Something went wrong. Try again.",
@@ -174,11 +174,10 @@ const Contact = () => {
             {/* STATUS MESSAGE */}
             {status.message && (
               <div
-                className={`mt-4 p-3 text-sm flex items-center gap-2 ${
-                  status.type === "success"
+                className={`mt-4 p-3 text-sm flex items-center gap-2 ${status.type === "success"
                     ? "bg-green-100 text-green-700"
                     : "bg-red-100 text-red-700"
-                }`}
+                  }`}
               >
                 {status.type === "success" && <CheckCircle size={18} />}
                 {status.message}
