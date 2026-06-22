@@ -57,9 +57,28 @@ const fallbackAboutItems = [
   },
 ];
 
+const sortProductsByTopRank = (list = []) => {
+  const ranked = [];
+  const unranked = [];
+
+  list.forEach((item) => {
+    const rank = Number(item?.topProductRank);
+    if (Number.isInteger(rank) && rank >= 1 && rank <= 6) {
+      ranked.push(item);
+    } else {
+      unranked.push(item);
+    }
+  });
+
+  ranked.sort((a, b) => Number(a.topProductRank) - Number(b.topProductRank));
+  return [...ranked, ...unranked];
+};
+
 const Home = ({ onQuoteClick }) => {
   const perPage = 6;
-  const [products, setProducts] = useState(() => getImmediateProducts("all").slice(0, perPage));
+  const [products, setProducts] = useState(() =>
+    sortProductsByTopRank(getImmediateProducts("all")).slice(0, perPage)
+  );
   const [productsPage, setProductsPage] = useState(1);
   const [hasMoreProducts, setHasMoreProducts] = useState(false);
   const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
@@ -81,8 +100,9 @@ const Home = ({ onQuoteClick }) => {
         const totalCount = Number(response.headers?.["x-total-count"] || 0);
 
         if (nextProducts.length > 0) {
-          setProducts(nextProducts);
-          saveCachedProducts("all", nextProducts);
+          const orderedProducts = sortProductsByTopRank(nextProducts);
+          setProducts(orderedProducts);
+          saveCachedProducts("all", orderedProducts);
           setProductsPage(1);
           if (totalCount > 0) {
             setHasMoreProducts(nextProducts.length < totalCount);
@@ -94,7 +114,9 @@ const Home = ({ onQuoteClick }) => {
         }
       } catch {
         setProducts((current) => {
-          const fallback = current.length ? current : getImmediateProducts("all").slice(0, perPage);
+          const fallback = current.length
+            ? current
+            : sortProductsByTopRank(getImmediateProducts("all")).slice(0, perPage);
           setHasMoreProducts(fallback.length >= perPage);
           return fallback;
         });
@@ -184,8 +206,9 @@ const Home = ({ onQuoteClick }) => {
             merged.push(item);
           }
         });
-        saveCachedProducts("all", merged);
-        return merged;
+        const orderedMerged = sortProductsByTopRank(merged);
+        saveCachedProducts("all", orderedMerged);
+        return orderedMerged;
       });
 
       setProductsPage(nextPage);
@@ -356,7 +379,7 @@ const Home = ({ onQuoteClick }) => {
             <SectionHeading
               eyebrow="Products"
               title="Premium Bath & Wellness Collection"
-              // text="Browse bathtubs, shower solutions, wellness and spa products, faucets, and accessories with a refined premium feel."
+            // text="Browse bathtubs, shower solutions, wellness and spa products, faucets, and accessories with a refined premium feel."
             />
             <Link to="/contact" className="btn-primary self-start lg:self-end">
               Request Pricing <ArrowRight size={18} />
@@ -482,7 +505,7 @@ const Home = ({ onQuoteClick }) => {
             <SectionHeading
               eyebrow="Testimonials"
               title="Trusted by homeowners, interior designers, and luxury hospitality projects."
-              // text="Our commitment to quality, comfort, and elegant design is reflected in every customer experience."
+            // text="Our commitment to quality, comfort, and elegant design is reflected in every customer experience."
             />
             <div className="mt-10">
               <TestimonialCarousel testimonials={testimonials} />
@@ -497,7 +520,7 @@ const Home = ({ onQuoteClick }) => {
           <SectionHeading
             eyebrow="Team"
             title="Passionate professionals delivering premium bath solutions."
-            // text="Helping customers choose the right bathroom and wellness products with trusted guidance, reliable support, and attention to detail."
+          // text="Helping customers choose the right bathroom and wellness products with trusted guidance, reliable support, and attention to detail."
           />
           <div className="mt-12">
             {teamMembers.length > 0 ? (

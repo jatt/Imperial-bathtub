@@ -76,6 +76,7 @@ const initialForms = {
   products: {
     name: "",
     category: "bathtubs",
+    topProductRank: "",
     size: "",
     price: "",
     shortDescription: "",
@@ -564,6 +565,12 @@ const AdminPannel = () => {
 
     try {
       const payload = { ...forms[activeModule] };
+      if (activeModule === "products") {
+        payload.topProductRank =
+          payload.topProductRank === "" || payload.topProductRank === null || payload.topProductRank === undefined
+            ? null
+            : Number(payload.topProductRank);
+      }
       const isProductModule = activeModule === "products";
       const productSnapshot = isProductModule
         ? lists.products.find((item) => item._id === editingId) || null
@@ -712,6 +719,23 @@ const AdminPannel = () => {
               {categories.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
+            </select>
+          </label>
+          <label className="text-sm font-semibold text-ink">
+            Top Product (Optional)
+            <select
+              name="topProductRank"
+              value={forms.products.topProductRank ?? ""}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-xl border border-ink/20 bg-ivory p-3 text-ink"
+            >
+              <option value="">None</option>
+              <option value="1">Top 1</option>
+              <option value="2">Top 2</option>
+              <option value="3">Top 3</option>
+              <option value="4">Top 4</option>
+              <option value="5">Top 5</option>
+              <option value="6">Top 6</option>
             </select>
           </label>
           <label className="text-sm font-semibold text-ink">

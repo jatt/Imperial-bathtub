@@ -1,0 +1,5 @@
+- [ ] Add optional topProductRank field in backend Product model (1..6)
+- [ ] Add optional Top Product dropdown (None, Top 1..Top 6) in Admin product form
+- [ ] Ensure product payload/save flow includes topProductRank
+- [ ] Sort Home products so ranked products appear first (Top 1 to Top 6)
+- [ ] Run lint and verify

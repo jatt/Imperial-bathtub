@@ -78,6 +78,12 @@ const productSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+
+    topProductRank: {
+      type: Number,
+      enum: [1, 2, 3, 4, 5, 6, null],
+      default: null,
+    },
   },
   {
     timestamps: true,
