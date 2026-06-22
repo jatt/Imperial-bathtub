@@ -356,7 +356,7 @@ const Home = ({ onQuoteClick }) => {
             <SectionHeading
               eyebrow="Products"
               title="Premium Bath & Wellness Collection"
-              text="Browse bathtubs, shower solutions, wellness and spa products, faucets, and accessories with a refined premium feel."
+              // text="Browse bathtubs, shower solutions, wellness and spa products, faucets, and accessories with a refined premium feel."
             />
             <Link to="/contact" className="btn-primary self-start lg:self-end">
               Request Pricing <ArrowRight size={18} />
@@ -453,7 +453,7 @@ const Home = ({ onQuoteClick }) => {
             <SectionHeading
               eyebrow="Gallery"
               title="Explore premium bathroom spaces and product installations."
-              text="Explore a collection of premium bathroom spaces featuring luxury bathtubs, shower solutions, wellness products, and modern bathroom designs crafted for comfort and elegance."
+              // text="Explore a collection of premium bathroom spaces featuring luxury bathtubs, shower solutions, wellness products, and modern bathroom designs crafted for comfort and elegance."
               tone="dark"
             />
             {/* <div className="flex items-center gap-3 text-white/45">
@@ -482,7 +482,7 @@ const Home = ({ onQuoteClick }) => {
             <SectionHeading
               eyebrow="Testimonials"
               title="Trusted by homeowners, interior designers, and luxury hospitality projects."
-              text="Our commitment to quality, comfort, and elegant design is reflected in every customer experience."
+              // text="Our commitment to quality, comfort, and elegant design is reflected in every customer experience."
             />
             <div className="mt-10">
               <TestimonialCarousel testimonials={testimonials} />
@@ -497,7 +497,7 @@ const Home = ({ onQuoteClick }) => {
           <SectionHeading
             eyebrow="Team"
             title="Passionate professionals delivering premium bath solutions."
-            text="Helping customers choose the right bathroom and wellness products with trusted guidance, reliable support, and attention to detail."
+            // text="Helping customers choose the right bathroom and wellness products with trusted guidance, reliable support, and attention to detail."
           />
           <div className="mt-12">
             {teamMembers.length > 0 ? (
