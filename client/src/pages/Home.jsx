@@ -271,6 +271,57 @@ const Home = ({ onQuoteClick }) => {
         </div>
       </section> */}
 
+
+
+      {/* Jacuzzi Collection */}
+      <AnimatedSection id="jacuzzi" className="p-10 bg-white">
+        <div className="container-shell">
+          <div className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <SectionHeading
+              eyebrow="Products"
+              title="Premium Bath & Wellness Collection"
+            // text="Browse bathtubs, shower solutions, wellness and spa products, faucets, and accessories with a refined premium feel."
+            />
+            <Link to="/contact" className="btn-primary self-start lg:self-end">
+              Request Pricing <ArrowRight size={18} />
+            </Link>
+          </div>
+          {products.length > 0 ? (
+            <>
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product._id || product.slug}
+                    product={product}
+                    onQuoteClick={onQuoteClick}
+                  />
+                ))}
+              </div>
+              {hasMoreProducts && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleLoadMoreProducts}
+                    disabled={isLoadingMoreProducts}
+                    className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isLoadingMoreProducts ? "Loading..." : "Load More"}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="rounded-2xl border border-ink/10 bg-ivory p-8 text-center">
+              <p className="text-sm font-semibold text-ink/70">
+                No products are listed in our catalog at the moment. Please
+                request pricing or contact us directly to explore custom
+                requirements.
+              </p>
+            </div>
+          )}
+        </div>
+      </AnimatedSection>
+
       {/* About Section */}
       <AnimatedSection id="about" className="pt-20 pb-12 bg-ivory">
         <div className="container-shell grid gap-12 lg:grid-cols-2 lg:items-center">
@@ -372,54 +423,7 @@ const Home = ({ onQuoteClick }) => {
         </div>
       </AnimatedSection>
 
-      {/* Jacuzzi Collection */}
-      <AnimatedSection id="jacuzzi" className="p-10 bg-white">
-        <div className="container-shell">
-          <div className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-            <SectionHeading
-              eyebrow="Products"
-              title="Premium Bath & Wellness Collection"
-            // text="Browse bathtubs, shower solutions, wellness and spa products, faucets, and accessories with a refined premium feel."
-            />
-            <Link to="/contact" className="btn-primary self-start lg:self-end">
-              Request Pricing <ArrowRight size={18} />
-            </Link>
-          </div>
-          {products.length > 0 ? (
-            <>
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {products.map((product) => (
-                  <ProductCard
-                    key={product._id || product.slug}
-                    product={product}
-                    onQuoteClick={onQuoteClick}
-                  />
-                ))}
-              </div>
-              {hasMoreProducts && (
-                <div className="mt-8 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={handleLoadMoreProducts}
-                    disabled={isLoadingMoreProducts}
-                    className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isLoadingMoreProducts ? "Loading..." : "Load More"}
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="rounded-2xl border border-ink/10 bg-ivory p-8 text-center">
-              <p className="text-sm font-semibold text-ink/70">
-                No products are listed in our catalog at the moment. Please
-                request pricing or contact us directly to explore custom
-                requirements.
-              </p>
-            </div>
-          )}
-        </div>
-      </AnimatedSection>
+      
 
       {/* Buying Guide */}
       <AnimatedSection className="p-10 bg-ink text-white">

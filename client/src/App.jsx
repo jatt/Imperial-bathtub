@@ -95,12 +95,14 @@ const App = () => {
         <main>
           <Routes>
             <Route path="/" element={<Home onQuoteClick={openQuote} />} />
-            <Route path="/about" element={<About onQuoteClick={openQuote} />} />
             <Route path="/products" element={<Products onQuoteClick={openQuote} />} />
             <Route
               path="/products/:slug"
               element={<ProductDetails onQuoteClick={openQuote} />}
             />
+            <Route path="/about" element={<About onQuoteClick={openQuote} />} />
+            
+            
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin-login" element={<AdminLogin />} />
